@@ -1,0 +1,33 @@
+CC = cl
+
+BUILD = build
+CFLAGS = /std:c11 /D_CRT_SECURE_NO_WARNINGS /W4 /I..\.. /Fo"$(BUILD)\\"
+
+TARGET = $(BUILD)\app
+SRC = main.c ints.c strings.c
+VECTOR_H = ..\..\vector.h
+
+EMPTY_TARGET = $(BUILD)\empty
+EMPTY_SRC = empty.c
+
+!IF "$(debug)"=="1"
+CFLAGS=$(CFLAGS) /Zi /Od
+!ELSE
+CFLAGS=$(CFLAGS) /O2
+!ENDIF
+
+all: $(TARGET) $(EMPTY_TARGET) $(BUILD)
+
+$(BUILD):
+	if not exist $(BUILD) mkdir $(BUILD)
+
+$(EMPTY_TARGET): $(EMPTY_C) $(VECTOR_H) $(BUILD)
+	$(CC) $(CFLAGS) /Fe:$(EMPTY_TARGET) $(EMPTY_SRC)
+
+$(TARGET): $(SRC) $(VECTOR_H) $(BUILD)
+	$(CC) $(CFLAGS) /Fe:$(TARGET) $(SRC)
+
+clean:
+	rmdir /S /Q $(BUILD)
+
+.PHONY: all clean
