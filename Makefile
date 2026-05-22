@@ -1,8 +1,18 @@
 CC = clang
-CFLAGS = -Wall -Wextra -ggdb
+CFLAGS = -Wall -Wextra -fPIC
+
+ifeq ($(d),1)
+	CFLAGS += -ggdb -O0 -fsanitize=memory
+else
+	CFLAGS += -O2
+endif
 
 BUILD = build
-TARGET = libcutils.so
+LIB_NAME = libcutils
+VERSION = 1.0.0
+OBJECT = $(BUILD)/lib/$(LIB_NAME).o
+DYN_LIB = $(BUILD)/lib/$(LIB_NAME).so.$(VERSION)
+STC_LIB = $(BUILD)/lib/$(LIB_NAME).a
 HEADERS = \
 	either.h \
 	vector.h \
@@ -11,25 +21,35 @@ HEADERS = \
 	futil.h
 SRC = build.c
 
-TRIMMED = $(addprefix $(BUILD)/, $(HEADERS))
+TRIMMED = $(addprefix $(BUILD)/include/, $(HEADERS))
 
-all: $(BUILD)/$(TARGET) $(BUILD) $(TRIMMED)
+all: $(DYN_LIB) $(STC_LIB) $(BUILD) $(TRIMMED)
 .PHONY: clean
 
 $(BUILD):
 	mkdir -p $(BUILD)
+	mkdir -p $(BUILD)/include
+	mkdir -p $(BUILD)/lib
 
-$(BUILD)/$(TARGET): $(SRC) $(HEADERS) | $(BUILD)
-	$(CC) $(CFLAGS) $(SRC) -o $(BUILD)/$(TARGET) -shared -fPIC
+$(OBJECT): $(SRC) $(HEADERS) | $(BUILD)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(STC_LIB): $(OBJECT) | $(BUILD)
+	ar rcs $@ $<
+	strip $@
+
+$(DYN_LIB): $(OBJECT) | $(BUILD)
+	$(CC) $(CFLAGS) -shared $< -o $@
+	strip $@
+	ln -s $(LIB_NAME).so.$(VERSION) $(BUILD)/lib/$(LIB_NAME).so || true
 
 define TRIM_RULE
-$(BUILD)/$(1): $(1) | $(BUILD)
+$(BUILD)/include/$(1): $(1) | $(BUILD)/include
 	awk ' \
 		BEGIN { \
 			print "/*"; \
 			print "  This file was generated automatically"; \
 			print "  It doesnt have implementation"; \
-			print "  Compatible with >=C89 or >=C++98"; \
 			print "*/"; \
 			print ""; \
 		} \
