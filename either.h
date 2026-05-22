@@ -4,12 +4,11 @@
 /*
   Rust's Result<T, E> implementation in C.
   This library DOES NOT DEPEND ANYTHING EXCEPT LIBC!
-  This header supposed to be used ONLY FOR C/C++!
+  This header supposed to be used ONLY FOR C!
   DO NOT USE RAW POINTERS IN EITHER/OPTION/RESULT NAME PARAMS!
   Instead, use (for int*) int_ptr or if you have a special pointer type
   define typedef of it. Because something like this: Result(int*)
   gives some errors. But this is safe: Result(int_ptr)
-
   And it comes with some tools for development like TODO or UNREACHABLE macros
 */
 
@@ -159,3 +158,26 @@ ERROR_CODES
 #endif // EITHER_IMPLEMENTATION
 // IMPLEMENTATION END
 #endif // EITHER_H
+
+/*
+  The MIT License
+  Copyright (c) 2026 ilpeN
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  THE SOFTWARE.
+*/
