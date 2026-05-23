@@ -3,7 +3,8 @@ CFLAGS = -Wall -Wextra -ggdb -fsanitize=memory -I../../ -DFUTIL_IMPLEMENTATION -
 
 BUILD = build
 TARGET = $(BUILD)/app
-SRC = main.c
+SRC = directories.c
+# SRC = main.c
 
 all: $(TARGET) $(BUILD)
 

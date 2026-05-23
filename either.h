@@ -30,7 +30,7 @@
   X(NO_SUCH_FILE, "No such file or directory") \
   X(MEM_CORRUPT, "Memory is corrupted")
 
-// Error Code enum, you can add or change here
+/* Error Code enum, you can add or change here */
 typedef enum {
   ERR_NOERR = 0,
 #define X(name, _) ERR_##name,
@@ -44,16 +44,16 @@ typedef struct {
   const char* message;
 } Error;
 
-EITHERDEF const char* err_tostr(Error err);
+EITHERDEF const char* err_tostr(ErrorCode err_code);
 
-// TODO macro, use this for not-implemented features
+/* TODO macro, use this for not-implemented features */
 #define TODO(fmt, ...) \
   do { \
     fprintf(stderr, "%s:%d: TODO: "fmt"\n", __FILE__, __LINE__, ##__VA_ARGS); \
     abort(); \
   } while (0)
 
-// UNREACHABLE macro, use it for regions that are not meant to be reached
+/* UNREACHABLE macro, use it for regions that are not meant to be reached */
 #define UNREACHABLE(fmt, ...) \
   do { \
     fprintf(stderr, "%s:%d: UNREACHABLE: "fmt"\n", __FILE__, __LINE__, ##__VA_ARGS__); \
@@ -63,7 +63,7 @@ EITHERDEF const char* err_tostr(Error err);
 #define MAKE_ERR(ecode, emsg) \
   ((Error){.code=(ecode), .message=(emsg)})
 
-// Either(L, R) holds 2 different typed value
+/* Either(L, R) holds 2 different typed value */
 #define Either(LName, RName) Either_##LName##_##RName
 
 #define DECL_EITHER(LType, LName, RType, RName) \
@@ -75,25 +75,25 @@ EITHERDEF const char* err_tostr(Error err);
     } as;                                       \
   } Either(LName, RName);
 
-// Producing Either structs for returns at functions
+/* Producing Either structs for returns at functions */
 #define EITHER_L(LName, RName, lval)                          \
   (Either(LName, RName)){ .is_left = 1, .as.left = (lval) }
 #define EITHER_R(LName, RName, rval)                            \
   (Either(LName, RName)){ .is_left = 0, .as.right = (rval) }
 
-// Unwrap mechanism to get R (right) and L (left)
+/* Unwrap mechanism to get R (right) and L (left) */
 #define EITHER_GETL(either)                     \
   ((either).as.left)
 #define EITHER_GETR(either)                     \
   ((either).as.right)
 
-// we have already is_left field to query value is left or right
+/* we have already is_left field to query value is left or right */
 
-// Result(T) aka Either(T, Error) (Wrapper of Either)
+/* Result(T) aka Either(T, Error) (Wrapper of Either) */
 #define Result(TName) Either(TName, Error)
 #define DECL_RESULT(T, TName) DECL_EITHER(T, TName, Error, Error)
 
-// Producing Result objects for returns
+/* Producing Result objects for returns */
 #define RES_OK(TName, val)                      \
   EITHER_L(TName, Error, (val))
 #define RES_ERR_MSG(TName, errcode, errmsg)         \
@@ -101,19 +101,19 @@ EITHERDEF const char* err_tostr(Error err);
 #define RES_ERR(TName, errcode)         \
   EITHER_R(TName, Error, MAKE_ERR(errcode, NULL))
 
-// Unwraps blindly, just unwrap
+/* Unwraps blindly, just unwrap */
 #define RES_UNWRAP(res)                         \
   ((res).as.left)
 
-// Left: Value, Right: Error
+/* Left: Value, Right: Error */
 #define RES_ISERR(res)                          \
   (!(res).is_left)
 
-// Get error without asking
+/* Get error without asking */
 #define RES_GETE(res) \
   (EITHER_GETR((res)))
 
-// Option(T)
+/* Option(T) */
 #define Option(TName) Option_##TName
 
 #define DECL_OPTION(TType, TName)               \
@@ -122,21 +122,23 @@ EITHERDEF const char* err_tostr(Error err);
     TType value;                                \
   } Option(TName);
 
-// Producing Option structs for returns
+/* Producing Option structs for returns */
 #define OPT_SOME(TName, val)                     \
   ((Option(TName)){ .is_some = true, .value = (val) })
 #define OPT_NONE(TName)                         \
   ((Option(TName)){ .is_some = false })
 
-// Unwrap blindly
+/* Unwrap blindly */
 #define OPT_UNWRAP(opt)                         \
   ((opt).value)
 
-// we have already is_some to query the value is either Some or None
+/* we have already is_some to query the value is either Some or None */
 
-// like Option<void>,
-// instead of using Option<bool>, use this
-// (if bool is just an error state)
+/*
+  like Option<void>,
+  instead of using Option<bool>, use this
+  (if bool is just an error state)
+*/
 typedef struct {
   bool is_error;
   Error error;
@@ -147,8 +149,8 @@ typedef struct {
 
 // IMPLEMENTATION BEGIN
 #ifdef EITHER_IMPLEMENTATION
-const char* err_tostr(Error err) {
-  switch(err.code) {
+const char* err_tostr(ErrorCode err_code) {
+  switch(err_code) {
 #define X(name, msg) case ERR_##name: return msg;
 ERROR_CODES
 #undef X
@@ -157,7 +159,7 @@ ERROR_CODES
 }
 #endif // EITHER_IMPLEMENTATION
 // IMPLEMENTATION END
-#endif // EITHER_H
+#endif /* EITHER_H */
 
 /*
   The MIT License

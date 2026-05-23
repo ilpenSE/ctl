@@ -4,7 +4,8 @@
 
 #define give_err(res, fmt, ...) \
   do { \
-    fprintf(stderr, "%s:%d: "fmt": %s\n", __FILE__, __LINE__, ##__VA_ARGS__, err_tostr(RES_GETE((res)))); \
+    fprintf(stderr, "%s:%d: "fmt": %s\n", __FILE__, __LINE__, ##__VA_ARGS__, \
+      err_tostr(RES_GETE((res)).code)); \
   } while (0)
 
 int main() {

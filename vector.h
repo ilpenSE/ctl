@@ -41,7 +41,7 @@
 #define VEC_INITIAL_CAPACITY 64
 static_assert(VEC_INITIAL_CAPACITY > 1, "VEC_INITIAL_CAPACITY must be >1");
 
-// Predefined typedefs to use in DECL_VECTOR and Vector()
+/* Predefined typedefs to use in DECL_VECTOR and Vector() */
 #ifndef __char_ptr_defined
 #define __char_ptr_defined
 typedef char* char_ptr;
@@ -80,7 +80,7 @@ typedef struct {
 
 #define VEC_TO_GENERIC(v) ((VectorGeneric){&(v)->h, (void**)&(v)->items, sizeof((v)->_type_tag)})
 
-// User-space macros, you want to use them:
+/* User-space macros, you want to use them: */
 
 #define vec_init(TName) (Vector(TName)){0}
 
@@ -126,12 +126,12 @@ typedef struct {
 #define vec_equals(lhs, rhs)                                \
   _vec_equals(VEC_TO_GENERIC((lhs)), VEC_TO_GENERIC((rhs)))
 
-// Convenience accessors
+/* Convenience accessors */
 #define vec_len(v)   ((v)->h.len)
 #define vec_cap(v)   ((v)->h.cap)
 #define vec_esize(v) (sizeof((v)->_type_tag))
 
-// They'll return pointer
+/* They'll return pointer */
 #define vec_last(v) (vec_at((v), vec_len((v)) - 1))
 #define vec_first(v) (vec_at((v), 0))
 
@@ -143,7 +143,7 @@ typedef struct {
         (assert(!vec_isfreed((v)) && "Vector shouldn't be freed (possible use-after-free)"), (v)->items); \
       it < (v)->items + vec_len((v)); it++)
 
-// Raw Functions
+/* Raw Functions */
 
 VECTORDEF bool _vec_push(VectorGeneric v, const void* value);
 VECTORDEF bool _vec_push_many(VectorGeneric v, const void* values, size_t count);
@@ -262,7 +262,7 @@ bool _vec_equals(VectorGeneric lhs, VectorGeneric rhs) {
 
 #endif // VECTOR_IMPLEMENTATION
 // IMPLEMENTATION END
-#endif // VECTOR_H
+#endif /* VECTOR_H */
 
 /*
   The MIT License

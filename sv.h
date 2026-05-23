@@ -2,9 +2,9 @@
 #define SV_H
 
 #ifdef __cplusplus
-#define SVDEF extern "C"
+  #define SVDEF extern "C"
 #else
-#define SVDEF extern
+  #define SVDEF extern
 #endif
 
 #include <stddef.h>
@@ -12,7 +12,7 @@
 #ifndef __StringView_defined
 #define __StringView_defined
 typedef struct {
-  const char* data; // not null terminated
+  const char* data; /* not null terminated */
   size_t len;
 } StringView;
 #endif
@@ -21,7 +21,7 @@ typedef struct {
 #define __String_defined
 typedef struct {
   char* data;
-  size_t len; // does not include \0
+  size_t len; /* does not include \0 */
   size_t cap;
 } String;
 #endif
@@ -42,8 +42,10 @@ typedef unsigned char uchar_t;
 #define SV_ARG(sv) (int)(sv)->len, (sv)->data
 #define SV_FMT "%.*s"
 
-// Usage: sv_from_str(s, .start = 0, .end = s->len)
-// or: sv_from_str(s), sv_from_str(s, .end = 10) (default values'll be 0)
+/*
+  Usage: sv_from_str(s, .start = 0, .end = s->len)
+  or: sv_from_str(s), sv_from_str(s, .end = 10) (default values'll be 0)
+*/
 #define sv_from_str(s, ...) sv_from_str_impl((s), (StringSlice){ __VA_ARGS__ })
 
 /*
@@ -53,6 +55,9 @@ SVDEF StringView sv_from_str_impl(const String* s, StringSlice slice);
 
 #define sv_from_cstre(buf, len, ...) \
   sv_from_cstre_impl((buf), (len), (StringSlice){ __VA_ARGS__ })
+
+#define sv_foreach(sv, it) \
+  for (const char* it = (sv)->data; it < (sv)->data + (sv)->len; it++)
 
 /*
   Slices string in range [start, end] and makes new StringView
@@ -84,9 +89,23 @@ SVDEF StringView sv_trim(StringView sv);
 SVDEF StringView sv_chop_left(StringView* sv, size_t n);
 SVDEF StringView sv_chop_right(StringView* sv, size_t n);
 
-// Synonyms for chops
+/* Synonyms for chops */
 #define sv_remove_prefix sv_chop_left
 #define sv_remove_suffix sv_chop_right
+
+/*
+  Start from left, chop until hitting the first delimiter character
+  Removes chopped part and delimiter char from string view
+  Returns that chopped part
+  If no delimiter char found, empty StringView'll be returned
+*/
+SVDEF StringView sv_chop_by_delim(StringView* sv, char delim);
+
+/*
+  Chop string view, starting from left, by a function
+  Function can be from ctype.h (isspace, isblank etc.)
+*/
+SVDEF StringView sv_chop_by_func(StringView* sv, int (*func)(int));
 
 /*
   Writes sv's data with length into zero-terminated string
@@ -173,6 +192,46 @@ bool sv_equals(const StringView* lhs, const StringView* rhs) {
   return sv_cmp(lhs, rhs) == 0;
 }
 
+StringView sv_chop_by_delim(StringView* sv, char delim) {
+  StringView chopped = {0};
+  for (size_t i = 0; i < sv->len; i++) {
+    if (sv->data[i] == delim) {
+      // Construct chopped part
+      chopped.len = i;
+      chopped.data = sv->data;
+      // TRIM orig
+      sv->len -= i + 1;
+      if (i == sv->len - 1) {
+        sv->data = NULL;
+      } else {
+        sv->data += i + 1;
+      }
+      break;
+    }
+  }
+  return chopped;
+}
+
+StringView sv_chop_by_func(StringView* sv, int (*func)(int)) {
+  StringView chopped = {0};
+  for (size_t i = 0; i < sv->len; i++) {
+    if (func((uchar_t)sv->data[i])) {
+      // Construct chopped part
+      chopped.len = i;
+      chopped.data = sv->data;
+      // TRIM orig
+      sv->len -= i + 1;
+      if (i == sv->len - 1) {
+        sv->data = NULL;
+      } else {
+        sv->data += i + 1;
+      }
+      break;
+    }
+  }
+  return chopped;
+}
+
 StringView sv_chop_left(StringView* sv, size_t n) {
   if (n >= sv->len) return (StringView) {0};
   StringView res = {.data=sv->data, .len=n};
@@ -208,7 +267,7 @@ StringView sv_trim(StringView sv) {
 
 #endif // SV_IMPLEMENTATION
 // IMPLEMENTATION END
-#endif // SV_H
+#endif /* SV_H */
 
 /*
   The MIT License

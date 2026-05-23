@@ -15,18 +15,18 @@
 #define __String_defined
 typedef struct {
   char* data;
-  size_t len; // does not include \0
+  size_t len; /* does not include \0 */
   size_t cap;
 } String;
-#endif // __String_defined
+#endif /* __String_defined */
 
 #ifndef __StringView_defined
 #define __StringView_defined
 typedef struct {
-  const char* data; // not null terminated
+  const char* data; /* not null terminated */
   size_t len;
 } StringView;
-#endif // __StringView_defined
+#endif /* __StringView_defined */
 
 #ifndef __uchar_t_defined
 typedef unsigned char uchar_t;
@@ -42,15 +42,17 @@ typedef unsigned char uchar_t;
   It's your responsibility to check them
 */
 
-// Bridge functions between str.h and sv.h
-// String must be defined, including str.h defines it
+/*
+  Bridge functions between str.h and sv.h
+  String must be defined, including str.h defines it
+*/
 #ifdef __StringView_defined
 /*
   Converts StringView into heap-allocated String
   Allocates memory for String, copies StringView's data and length
 */
 STRDEF String str_from_sv(const StringView* sv);
-#endif // __StringView_defined
+#endif /* __StringView_defined */
 
 /*
   Makes and returns string struct from C-strings with length
@@ -458,7 +460,7 @@ char* str_to_cstr(const String* s) {
 
 #endif // STR_IMPLEMENTATION
 // IMPLEMENTATION END
-#endif // STR_H
+#endif /* STR_H */
 
 /*
   The MIT License
