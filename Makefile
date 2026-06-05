@@ -18,7 +18,8 @@ HEADERS = \
 	vector.h \
 	sv.h \
 	str.h \
-	futil.h
+	futil.h \
+	buic.h
 SRC = build.c
 
 TRIMMED = $(addprefix $(BUILD)/include/, $(HEADERS))

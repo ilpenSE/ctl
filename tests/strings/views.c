@@ -10,7 +10,7 @@ int main() {
 
   const char* some_str = "Çağatay Akman";
   //                      ^^^ -> 5 bytes
-  StringView sv5 = sv_from_cstre(some_str, strlen(some_str), .start = 0, .end = 5); // Çağ
+  StringView sv5 = sv_from_cstrn(some_str, strlen(some_str), .start = 0, .end = 5); // Çağ
 
   print_sv(&sv1);
   print_sv(&sv2);

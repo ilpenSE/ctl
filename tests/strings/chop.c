@@ -2,7 +2,7 @@
 #include "prettyp.h"
 
 int main() {
-  StringView sv1 = sv_from_cstr("hello world!");
+  StringView sv1 = sv("hello world!");
   print_sv(&sv1);
 
   sv_chop_left(&sv1, 2);

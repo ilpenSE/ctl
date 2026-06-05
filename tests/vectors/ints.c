@@ -12,7 +12,7 @@ int test_ints() {
 
   TEST_SEPERATOR;
 
-  if (!vec_push_many(&vec, 69, 67)) give_error("vec_push_many 69, 67");
+  if (!vec_push(&vec, 69, 67)) give_error("vec_push_many 69, 67");
   print_int_vector(&vec);
 
   TEST_SEPERATOR;
@@ -53,6 +53,16 @@ int test_ints() {
 
   // remove elem with idx 1 (20 in our case)
   if (!vec_remove_unord(&vec, 1)) give_error("vec_remove_unord");
+  print_int_vector(&vec);
+
+  TEST_SEPERATOR;
+
+  Vector(int) vec2 = {0};
+  vec_push(&vec2, 0, 1, 2, 3);
+  printf("Vector2 (gonna be merged into vec) = ");
+  print_int_vector(&vec2);
+  vec_merge(&vec, &vec2);
+  printf("Merged vector = ");
   print_int_vector(&vec);
 
   TEST_SEPERATOR;

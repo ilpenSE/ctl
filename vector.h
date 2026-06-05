@@ -65,36 +65,43 @@ typedef struct {
 
 #define Vector(TName) Vector_##TName
 
-#define DECL_VECTOR(T, TName)                   \
-  typedef struct {                              \
-    VectorHeader h;                             \
-    T* items;                                   \
-    T _type_tag;                                \
-  } Vector_##TName;
-
 typedef struct {
   VectorHeader* header;
   void** items;
   size_t elem_size;
 } VectorGeneric;
 
-#define VEC_TO_GENERIC(v) ((VectorGeneric){&(v)->h, (void**)&(v)->items, sizeof((v)->_type_tag)})
+#define VEC_TO_GENERIC(v) ((VectorGeneric){&(v)->h, (void**)&(v)->items, sizeof(*(v)->items)})
+
+#define DECL_VECTOR(T, TName)                   \
+  typedef struct {                              \
+    VectorHeader h;                             \
+    T* items;                                   \
+  } Vector_##TName;
 
 /* User-space macros, you want to use them: */
 
 #define vec_init(TName) (Vector(TName)){0}
 
-#define vec_push(v, val)                                            \
-  __extension__({                                                   \
-      __typeof__((v)->_type_tag) _tmp = (val);                      \
-      _vec_push(VEC_TO_GENERIC((v)), &_tmp); \
+#define vec_push(v, ...)                                           \
+  __extension__({                                                       \
+      __typeof__(*(v)->items) _arr[] = {__VA_ARGS__};                \
+      _vec_push(VEC_TO_GENERIC((v)), _arr, sizeof(_arr)/sizeof(_arr[0])); \
     })
 
-#define vec_push_many(v, ...)                                           \
-  __extension__({                                                       \
-      __typeof__((v)->_type_tag) _arr[] = {__VA_ARGS__};                \
-      _vec_push_many(VEC_TO_GENERIC((v)), _arr, sizeof(_arr)/sizeof(_arr[0])); \
-    })
+// Not used this because of double evaluation of v1 and v2:
+// #define vec_merge(v1, v2) (
+//   __builtin_types_compatible_p(__typeof__(*(v1)->items), __typeof__(*(v2)->items))
+//     ? _vec_merge(VEC_TO_GENERIC((v1)), VEC_TO_GENERIC((v2)))
+//     : false)
+// Used statement expression extension: (only evaluated once)
+#define vec_merge(v1, v2) __extension__({ \
+    __typeof__(v1) _v1 = (v1); \
+    __typeof__(v2) _v2 = (v2); \
+    __builtin_types_compatible_p(__typeof__(*(_v1)->items), __typeof__(*(_v2)->items)) \
+        ? _vec_merge(VEC_TO_GENERIC((_v1)), VEC_TO_GENERIC((_v2))) \
+        : false; \
+})
 
 #define vec_remove_unord(v, idx) \
   _vec_remove_unord(VEC_TO_GENERIC((v)), (idx))
@@ -103,12 +110,12 @@ typedef struct {
   _vec_remove_idx(VEC_TO_GENERIC((v)), (idx))
 
 #define vec_at(v, index)                        \
-  ((__typeof__((v)->_type_tag)*)                \
+  ((__typeof__(*(v)->items)*)                \
    _vec_at(VEC_TO_GENERIC((v)), (index)))
 
 #define vec_find(v, item)                       \
   __extension__({                               \
-      __typeof__((v)->_type_tag) _tmp = (item); \
+      __typeof__(*(v)->items) _tmp = (item); \
       _vec_find(VEC_TO_GENERIC((v)), &_tmp);    \
     })
 
@@ -129,7 +136,7 @@ typedef struct {
 /* Convenience accessors */
 #define vec_len(v)   ((v)->h.len)
 #define vec_cap(v)   ((v)->h.cap)
-#define vec_esize(v) (sizeof((v)->_type_tag))
+#define vec_esize(v) (sizeof(*(v)->items))
 
 /* They'll return pointer */
 #define vec_last(v) (vec_at((v), vec_len((v)) - 1))
@@ -139,14 +146,13 @@ typedef struct {
 #define vec_isfirst(v, item) (vec_first((v)) ? (*vec_first((v)) == item) : false)
 
 #define vec_foreach(v, it)                                              \
-  for(__typeof__((v)->_type_tag)* it =                                  \
+  for(__typeof__(*(v)->items)* it =                                  \
         (assert(!vec_isfreed((v)) && "Vector shouldn't be freed (possible use-after-free)"), (v)->items); \
       it < (v)->items + vec_len((v)); it++)
 
 /* Raw Functions */
 
-VECTORDEF bool _vec_push(VectorGeneric v, const void* value);
-VECTORDEF bool _vec_push_many(VectorGeneric v, const void* values, size_t count);
+VECTORDEF bool _vec_push(VectorGeneric v, const void* values, size_t count);
 VECTORDEF bool _vec_remove_unord(VectorGeneric v, size_t idx);
 VECTORDEF bool _vec_remove_idx(VectorGeneric v, size_t idx);
 VECTORDEF void* _vec_at(VectorGeneric v, size_t index);
@@ -156,6 +162,7 @@ VECTORDEF bool _vec_reserve(VectorGeneric v, size_t extra);
 VECTORDEF void _vec_free(VectorGeneric v);
 VECTORDEF bool _vec_isfreed(VectorGeneric v);
 VECTORDEF bool _vec_equals(VectorGeneric lhs, VectorGeneric rhs);
+VECTORDEF bool _vec_merge(VectorGeneric v1, VectorGeneric v2);
 
 // IMPLEMENTATION BEGIN
 #ifdef VECTOR_IMPLEMENTATION
@@ -183,19 +190,7 @@ bool _vec_reserve(VectorGeneric v, size_t extra) {
   return true;
 }
 
-bool _vec_push(VectorGeneric v, const void* value) {
-  if (_vec_isfreed(v) || !_vec_reserve(v, 1)) return false;
-
-  memcpy(
-    (char*)(*v.items) + v.header->len * v.elem_size,
-    value,
-    v.elem_size
-    );
-  v.header->len += 1;
-  return true;
-}
-
-bool _vec_push_many(VectorGeneric v, const void* values, size_t count) {
+bool _vec_push(VectorGeneric v, const void* values, size_t count) {
   if (_vec_isfreed(v) || !_vec_reserve(v, count)) return false;
 
   memcpy(
@@ -258,6 +253,14 @@ bool _vec_equals(VectorGeneric lhs, VectorGeneric rhs) {
   if (lhs.elem_size != rhs.elem_size
       || lhs.header->len != rhs.header->len) return false;
   return memcmp(*lhs.items, *rhs.items, lhs.header->len * lhs.elem_size) == 0;
+}
+
+bool _vec_merge(VectorGeneric v1, VectorGeneric v2) {
+  assert(v1.elem_size == v2.elem_size);
+  if (v2.header->len + v1.header->len >= v1.header->cap)
+    _vec_reserve(v1, v2.header->len);
+  _vec_push(v1, *v2.items, v2.header->len);
+  return true;
 }
 
 #endif // VECTOR_IMPLEMENTATION

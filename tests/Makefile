@@ -4,6 +4,7 @@ CATEGORIES = \
 	vectors \
 	either \
 	futil \
+	json \
 	linking
 
 all: $(CATEGORIES)

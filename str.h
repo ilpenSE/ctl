@@ -304,6 +304,7 @@ bool str_catn(String* s, const char* buf, size_t bufsz) {
 }
 
 bool str_cat(String* s, const char* buf) {
+  if (!buf) return false;
   return str_catn(s, buf, strlen(buf));
 }
 

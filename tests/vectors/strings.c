@@ -15,7 +15,7 @@ int test_strings() {
 
   TEST_SEPERATOR;
 
-  if (!vec_push_many(&vec, "selamın", "aleyküm", "aleyküm", NULL))
+  if (!vec_push(&vec, "selamın", "aleyküm", "aleyküm", NULL))
     give_error("Failed to push many");
   print_cstr_vector(&vec);
   printf("idx of aleyküm: %d\n", vec_find(&vec, "aleyküm")); // will print first element's idx
@@ -48,12 +48,12 @@ int test_strings() {
   TEST_SEPERATOR;
 
   Vector(char_ptr) vec1 = {0};
-  vec_push_many(&vec1, "hello", "world", "!");
+  vec_push(&vec1, "hello", "world", "!");
   printf("Vec1 = ");
   print_cstr_vector(&vec1);
 
   Vector(char_ptr) vec2 = {0};
-  vec_push_many(&vec2, "hello", "world", "!");
+  vec_push(&vec2, "hello", "world", "!");
   printf("Vec2 = ");
   print_cstr_vector(&vec2);
 
