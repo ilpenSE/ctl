@@ -1,6 +1,10 @@
 #ifndef STR_H
 #define STR_H
 
+#ifdef _MSC_VER
+  #error "This header does not support MSVC, please don't use garbage slop compilers."
+#endif
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -11,12 +15,38 @@
 #define STRDEF extern
 #endif
 
+/* Custom malloc, realloc and free function types (if you have some sort of an arena) */
+#ifndef __str_allocator_t_defined
+#define __str_allocator_t_defined
+typedef void* (*str_allocator_t)(size_t);
+#endif /* __str_allocator_t_defined */
+
+#ifndef __str_reallocator_t_defined
+#define __str_reallocator_t_defined
+typedef void* (*str_reallocator_t)(void*, size_t);
+#endif /* __str_reallocator_t_defined */
+
+#ifndef __str_freer_t_defined
+#define __str_freer_t_defined
+typedef void  (*str_freer_t)(void*);
+#endif /* __str_freer_t_defined */
+
+#ifndef __StringMemory_defined
+#define __StringMemory_defined
+typedef struct {
+  str_allocator_t allocator;
+  str_reallocator_t reallocator;
+  str_freer_t freer;
+} StringMemory;
+#endif
+
 #ifndef __String_defined
 #define __String_defined
 typedef struct {
   char* data;
   size_t len; /* does not include \0 */
   size_t cap;
+  StringMemory memory;
 } String;
 #endif /* __String_defined */
 
@@ -51,7 +81,9 @@ typedef unsigned char uchar_t;
   Converts StringView into heap-allocated String
   Allocates memory for String, copies StringView's data and length
 */
-STRDEF String str_from_sv(const StringView* sv);
+#define str_from_sv(sv, ...) \
+  str_from_sv_impl(sv, (StringMemory){__VA_ARGS__})
+STRDEF String str_from_sv_impl(const StringView* sv, StringMemory memory);
 #endif /* __StringView_defined */
 
 /*
@@ -60,14 +92,18 @@ STRDEF String str_from_sv(const StringView* sv);
   But if you dont have and if you're using strlen, you can use
   str_from_cstr, it does strlen
  */
-STRDEF String str_newn(const char* buf, size_t len);
+#define str_newn(buf, len, ...) \
+  str_newn_impl(buf, len, (StringMemory){__VA_ARGS__})
+STRDEF String str_newn_impl(const char* buf, size_t len, StringMemory memory);
 
 /*
   str_newn with no len value, it calculates len via strlen
   If you dont have your String's length value or just dont want
   to use strlen by yourself, you can use this
  */
-STRDEF String str_new(const char* buf);
+#define str_new(buf, ...) \
+  str_new_impl(buf, (StringMemory){__VA_ARGS__})
+STRDEF String str_new_impl(const char* buf, StringMemory memory);
 
 /*
   Reservers needed memory for the String
@@ -215,13 +251,13 @@ STRDEF void str_capitalize(String* s);
 #include <ctype.h>
 
 #ifdef __StringView_defined
-String str_from_sv(const StringView* sv) {
-  return str_newn(sv->data, sv->len);
+String str_from_sv_impl(const StringView* sv, StringMemory memory) {
+  return str_newn_impl(sv->data, sv->len, memory);
 }
 #endif // __StringView_defined
 
-String str_newn(const char* buf, size_t len) {
-  String s = {0};
+String str_newn_impl(const char* buf, size_t len, StringMemory memory) {
+  String s = {.memory=memory};
   size_t cap = len + 16; // this 16 is for pre-allocation
   if (!str_reserve(&s, cap)) return s;
   memcpy(s.data, buf, len);
@@ -230,13 +266,16 @@ String str_newn(const char* buf, size_t len) {
   return s;
 }
 
-String str_new(const char* buf) {
-  return str_newn(buf, strlen(buf));
+String str_new_impl(const char* buf, StringMemory memory) {
+  return str_newn_impl(buf, strlen(buf), memory);
 }
 
 void str_free(String* s) {
   if (!s->data) return;
-  free(s->data);
+  // Use free from stdlib.h if no custom free function preset.
+  str_freer_t free_fn = s->memory.freer;
+  if (free_fn == NULL) free_fn = free;
+  free_fn(s->data);
   s->data = NULL;
   s->len = 0;
   s->cap = 0;
@@ -250,8 +289,12 @@ void str_clear(String *s) {
 }
 
 bool str_shrink_to_fit(String* s) {
+  // Use realloc from stdlib.h if no custom realloc function preset.
+  str_reallocator_t realloc_fn = s->memory.reallocator;
+  if (realloc_fn == NULL) realloc_fn = realloc;
+
   size_t new_cap = s->len + 1;
-  void* tmp = realloc(s->data, new_cap);
+  void* tmp = realloc_fn(s->data, new_cap);
   if (!tmp) return false;
   else s->data = (char*)tmp;
   s->cap = new_cap;
@@ -283,7 +326,11 @@ bool str_reserve(String* s, size_t extra) {
 
   // sum does NOT fit
   size_t new_cap = sum * 2;
-  char *tmp = (char*)realloc(s->data, new_cap);
+  // Use realloc from stdlib.h if no custom realloc function preset.
+  str_reallocator_t realloc_fn = s->memory.reallocator;
+  if (realloc_fn == NULL) realloc_fn = realloc;
+
+  char *tmp = (char*)realloc_fn(s->data, new_cap);
   if (!tmp) return false;
 
   s->data = tmp;

@@ -15,7 +15,7 @@ DYN_LIB = $(BUILD)/lib/$(LIB_NAME).so.$(VERSION)
 STC_LIB = $(BUILD)/lib/$(LIB_NAME).a
 HEADERS = \
 	either.h \
-	vector.h \
+	array.h \
 	sv.h \
 	str.h \
 	futil.h \

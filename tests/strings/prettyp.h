@@ -30,7 +30,7 @@
 
 #define print_sv(sv) do {                       \
     pprint("[SV] data: \"" SV_FMT "\"", SV_ARG(sv));    \
-    pprint("[SV] count: %zu", (sv)->len);       \
+    pprint("[SV] count: %zu", (sv).len);       \
     printf("==================\n");             \
   } while(0)
 

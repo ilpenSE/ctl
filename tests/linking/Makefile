@@ -8,4 +8,4 @@ SRC = main.c
 TARGET = app
 
 $(TARGET): $(SRC) Makefile
-	$(CC) $(CFLAGS) $(SRC) -o $(TARGET) $(LDFLAGS) $(LD_LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(LD_LIBS) $(SRC) -o $(TARGET)

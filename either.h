@@ -1,6 +1,10 @@
 #ifndef EITHER_H
 #define EITHER_H
 
+#ifdef _MSC_VER
+  #error "This header does not support MSVC, please don't use garbage slop compilers."
+#endif
+
 /*
   Rust's Result<T, E> implementation in C.
   This library DOES NOT DEPEND ANYTHING EXCEPT LIBC!
@@ -59,6 +63,8 @@ EITHERDEF const char* err_tostr(ErrorCode err_code);
     fprintf(stderr, "%s:%d: UNREACHABLE: "fmt"\n", __FILE__, __LINE__, ##__VA_ARGS__); \
     __builtin_unreachable(); \
   } while(0)
+
+#define STRINGIFY(macro) #macro
 
 #define MAKE_ERR(ecode, emsg) \
   ((Error){.code=(ecode), .message=(emsg)})

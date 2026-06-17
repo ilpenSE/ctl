@@ -1,7 +1,7 @@
 # This makefile automatically builds all the tests
 CATEGORIES = \
 	strings \
-	vectors \
+	arrays \
 	either \
 	futil \
 	json \

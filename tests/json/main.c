@@ -3,14 +3,34 @@
 #include <either.h>
 
 int main() {
-  Result(JsonState) res = json_read("test.json");
-  if (RES_ISERR(&res)) {
-    printf("ERROR: %s\n", RES_GETE(&res).message);
+  Result(Json) json_res = json_read("test.json");
+  if (RES_ISERR(json_res)) {
+    fprintf(stderr, "ERROR: Failed to read json file: %s", err_tostr(json_res.as.right.code));
     return 1;
   }
-  JsonState state = RES_UNWRAP(&res);
-
-  json_deserialize(&state);
-
+  Json json = RES_UNWRAP(json_res);
+  // json_dump(&json);
+  if (!json_parse(&json)) return 1;
+  JsonObject obj = json.value.as.object;
+  arr_foreach(&obj, it) {
+    JsonPair pair = *it;
+    char buf[1024];
+    switch(pair.value->type) {
+    case JSON_NUMBER:
+      snprintf(buf, sizeof(buf), "%f", pair.value->as.number);
+      break;
+    case JSON_TRUE:
+    case JSON_FALSE:
+      snprintf(buf, sizeof(buf), "%s", pair.value->as.boolean ? "true" : "false");
+      break;
+    case JSON_ARRAY:
+      snprintf(buf, sizeof(buf), "<array>");
+      break;
+    default:
+      snprintf(buf, sizeof(buf), "unknown");
+      break;
+    }
+    printf("Key: "SV_FMT" => %s\n", SV_ARG(pair.key), buf);
+  }
   return 0;
 }

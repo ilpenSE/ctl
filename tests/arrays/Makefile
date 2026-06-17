@@ -4,7 +4,7 @@ CFLAGS = -Wall -Wextra -I../../
 BUILD = build
 TARGET = $(BUILD)/app
 SRC = main.c ints.c strings.c
-VECTOR_H = ../../vector.h
+ARRAY_H = ../../array.h
 
 EMPTY_TARGET = $(BUILD)/empty
 EMPTY_SRC = empty.c
@@ -20,10 +20,10 @@ all: $(TARGET) $(EMPTY_TARGET) $(BUILD)
 $(BUILD):
 	mkdir -p $(BUILD)
 
-$(EMPTY_TARGET): $(EMPTY_C) $(VECTOR_H) | $(BUILD)
+$(EMPTY_TARGET): $(EMPTY_C) $(ARRAY_H) | $(BUILD)
 	$(CC) $(CFLAGS) -o $(EMPTY_TARGET) $(EMPTY_SRC)
 
-$(TARGET): $(SRC) $(VECTOR_H) | $(BUILD)
+$(TARGET): $(SRC) $(ARRAY_H) | $(BUILD)
 	$(CC) $(CFLAGS) -o $(TARGET) $(SRC)
 
 clean:

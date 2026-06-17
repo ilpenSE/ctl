@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -ggdb -DSTR_IMPLEMENTATION -DSV_IMPLEMENTATION -I../../
+CFLAGS = -Wall -Wextra -Wno-override-init -ggdb -DSTR_IMPLEMENTATION -DSV_IMPLEMENTATION -I../../
 
 STR_H = ../../str.h
 SV_H = ../../sv.h

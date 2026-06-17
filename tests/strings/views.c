@@ -3,29 +3,29 @@
 
 int main() {
   String s = str_new("Hello, World!");
-  StringView sv1 = sv_from_str(&s, .start = 0, .end = s.len); // Hello, World!
-  StringView sv2 = sv_from_str(&s, .start = 0, .end = 4); // Hell
-  StringView sv3 = sv_from_str(&s, .start = 0, .end = 50); // empty
-  StringView sv4 = sv_from_str(&s, .start = 7, .end = s.len); // World!
+  StringView sv1 = svs(&s, .start = 0, .end = s.len); // Hello, World!
+  StringView sv2 = svs(&s, .start = 0, .end = 4); // Hell
+  StringView sv3 = svs(&s, .start = 0, .end = 50); // empty
+  StringView sv4 = svs(&s, .start = 7, .end = s.len); // World!
 
   const char* some_str = "Çağatay Akman";
   //                      ^^^ -> 5 bytes
-  StringView sv5 = sv_from_cstrn(some_str, strlen(some_str), .start = 0, .end = 5); // Çağ
+  StringView sv5 = svn(some_str, strlen(some_str), .start = 0, .end = 5); // Çağ
 
-  print_sv(&sv1);
-  print_sv(&sv2);
-  print_sv(&sv3);
-  print_sv(&sv4);
-  print_sv(&sv5);
+  print_sv(sv1);
+  print_sv(sv2);
+  print_sv(sv3);
+  print_sv(sv4);
+  print_sv(sv5);
 
   StringView chopped = sv_chop_by_delim(&sv1, ',');
-  print_sv(&sv1); // " World!"
-  print_sv(&chopped); // "Hello"
+  print_sv(sv1); // " World!"
+  print_sv(chopped); // "Hello"
 
-  StringView hello_world = sv_from_str(&s, .start = 0, .end = s.len);
+  StringView hello_world = svs(&s, .start = 0, .end = s.len);
   StringView hello = sv_chop_by_func(&hello_world, isspace);
-  print_sv(&hello_world); // "World!"
-  print_sv(&hello); // "Hello,"
+  print_sv(hello_world); // "World!"
+  print_sv(hello); // "Hello,"
 
   str_free(&s);
   return 0;

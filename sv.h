@@ -1,12 +1,17 @@
 #ifndef SV_H
 #define SV_H
 
+#ifdef _MSC_VER
+  #error "This header does not support MSVC, please don't use garbage slop compilers."
+#endif
+
 #ifdef __cplusplus
   #define SVDEF extern "C"
 #else
   #define SVDEF extern
 #endif
 
+#include <string.h>
 #include <stddef.h>
 
 #ifndef __StringView_defined
@@ -18,12 +23,38 @@ typedef struct {
 } StringView;
 #endif
 
+/* Custom malloc, realloc and free function types (if you have some sort of an arena) */
+#ifndef __str_allocator_t_defined
+#define __str_allocator_t_defined
+typedef void* (*str_allocator_t)(size_t);
+#endif /* __str_allocator_t_defined */
+
+#ifndef __str_reallocator_t_defined
+#define __str_reallocator_t_defined
+typedef void* (*str_reallocator_t)(void*, size_t);
+#endif /* __str_reallocator_t_defined */
+
+#ifndef __str_freer_t_defined
+#define __str_freer_t_defined
+typedef void  (*str_freer_t)(void*);
+#endif /* __str_freer_t_defined */
+
+#ifndef __StringMemory_defined
+#define __StringMemory_defined
+typedef struct {
+  str_allocator_t allocator;
+  str_reallocator_t reallocator;
+  str_freer_t freer;
+} StringMemory;
+#endif
+
 #ifndef __String_defined
 #define __String_defined
 typedef struct {
   char* data;
   size_t len; /* does not include \0 */
   size_t cap;
+  StringMemory memory;
 } String;
 #endif
 
@@ -40,7 +71,7 @@ typedef unsigned char uchar_t;
 #define __uchar_t_defined
 #endif
 
-#define SV_ARG(sv) (int)(sv)->len, (sv)->data
+#define SV_ARG(sv) (int)(sv).len, (sv).data
 #define SV_FMT "%.*s"
 
 #define sv_foreach(sv, it) \
@@ -51,7 +82,7 @@ typedef unsigned char uchar_t;
   or: sv_from_str(s), sv_from_str(s, .end = 10) (default values'll be 0)
 */
 #define svs(s, ...) \
-  sv_from_str_impl((s), (StringSlice){.start=0, .end=(s)->len __VA_ARGS__ })
+  sv_from_str_impl((s), (StringSlice){.start=0, .end=(s)->len, ##__VA_ARGS__ })
 
 /*
   Slices heap-allocated string, wrapper to sv_from_cstr
@@ -62,13 +93,13 @@ SVDEF StringView sv_from_str_impl(const String* s, StringSlice slice);
   sv_from_cstrn_impl((buf), (len), (StringSlice){.end=len-1,__VA_ARGS__})
 
 /*
-  Slices string in range [start, end] and makes new StringView
+  Slices string in range [start, end) and makes new StringView
   Length, start and end are checked
 */
 SVDEF StringView sv_from_cstrn_impl(const char* buf, size_t len, StringSlice slice);
 
 #define sv(buf, ...) \
-  sv_from_cstr_impl((buf), (StringSlice){.end=(strlen((buf)))__VA_ARGS__})
+  sv_from_cstr_impl((buf), (StringSlice){.end=(strlen((buf))), ##__VA_ARGS__})
 
 /*
   Produce StringView from zero-ended const strings without explicit start and end
@@ -124,6 +155,7 @@ SVDEF void sv_tostr(const StringView* sv, char* out);
   Basically: sv_cmp(lhs, rhs) == 0 like strcmp(lhs, rhs) == 0
 */
 SVDEF bool sv_equals(const StringView* lhs, const StringView* rhs);
+SVDEF bool sv_equals_cstr(const StringView* lhs, const char* rhs);
 
 /*
   Compares 2 string views
@@ -196,6 +228,11 @@ int sv_cmp(const StringView* lhs, const StringView* rhs) {
 
 bool sv_equals(const StringView* lhs, const StringView* rhs) {
   return sv_cmp(lhs, rhs) == 0;
+}
+
+bool sv_equals_cstr(const StringView* lhs, const char* rhs) {
+  StringView view = sv(rhs);
+  return sv_equals(lhs, &view);
 }
 
 StringView sv_chop_by_delim(StringView* sv, char delim) {

@@ -1,12 +1,16 @@
 #ifndef BUIC_H
 #define BUIC_H
 
-#include <stdbool.h>
-#include "vector.h"
+#ifdef _MSC_VER
+  #error "This header does not support MSVC, please don't use garbage slop compilers."
+#endif
 
-DECL_VECTOR(const char*, const_char_ptr);
+#include <stdbool.h>
+#include "array.h"
+
+DECL_ARRAY(const char*, const_char_ptr);
 typedef const char* const_char_ptr;
-typedef Vector(const_char_ptr) Vector_cstr;
+typedef Array(const_char_ptr) Array_cstr;
 
 typedef enum {
   BCCOMP_NATIVE = 0,
@@ -17,12 +21,12 @@ typedef enum {
 } BuildCompiler;
 
 typedef struct {
-  Vector_cstr flags; // custom (arbitrary) flags
-  Vector_cstr defines; // -D OR /D
-  Vector_cstr inputs;
-  Vector_cstr include_paths; // /include -> -I./include
-  Vector_cstr lib_paths; // /lib -> -L./lib
-  Vector_cstr libs; // -l:libmylib.so
+  Array_cstr flags; // custom (arbitrary) flags
+  Array_cstr defines; // -D OR /D
+  Array_cstr inputs;
+  Array_cstr include_paths; // /include -> -I./include
+  Array_cstr lib_paths; // /lib -> -L./lib
+  Array_cstr libs; // -l:libmylib.so
   const char* src_path; // /src -> main.c -> src/main.c
   const char* build_dir;
   const char* output;
@@ -45,6 +49,8 @@ const char* bcomp_to_cstr(BuildCompiler compiler);
 // IMPLEMENTATION BEGIN
 #ifdef BUIC_IMPLEMENTATION
 #include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/wait.h>
 
 #if defined(_WIN32)
@@ -73,7 +79,7 @@ const char* bcomp_to_cstr(BuildCompiler compiler) {
 
 bool cmd_run_opt(CommandBuilder* cmd, CommandRunOptions opts) {
   bool ok = false;
-  Vector_cstr cmdline = {0};
+  Array_cstr cmdline = {0};
   const char* ptrs[8] = {0};
   size_t idx = 0;
   if (!cmd) goto defer;
@@ -81,11 +87,11 @@ bool cmd_run_opt(CommandBuilder* cmd, CommandRunOptions opts) {
   // Add compiler
   const char* compiler_str = bcomp_to_cstr(cmd->compiler);
   if (!compiler_str) goto defer;
-  vec_push(&cmdline, compiler_str);
+  arr_push(&cmdline, compiler_str);
 
   // Add source files
   if (cmd->src_path && *cmd->src_path) {
-    vec_foreach(&cmd->inputs, it) {
+    arr_foreach(&cmd->inputs, it) {
       size_t dir_len = strlen(cmd->src_path);
       size_t file_len = strlen(*it);
       size_t total = file_len + dir_len + 2;
@@ -94,10 +100,10 @@ bool cmd_run_opt(CommandBuilder* cmd, CommandRunOptions opts) {
       ptrs[idx++] = buf;
       assert(snprintf(buf, total,
              "%s"_BUIC_PATH_SEP"%s", cmd->src_path, *it) == (int)total - 1);
-      vec_push(&cmdline, buf);
+      arr_push(&cmdline, buf);
     }
   } else {
-    vec_merge(&cmdline, &cmd->inputs);
+    arr_merge(&cmdline, &cmd->inputs);
   }
 
 // (field_name, prefix_str, prefix_len)
@@ -108,19 +114,19 @@ bool cmd_run_opt(CommandBuilder* cmd, CommandRunOptions opts) {
   X(defines, "-D", 2)
 
 #define X(field_name, prefix_str, prefix_len) \
-  vec_foreach(&cmd->field_name, it) {\
+  arr_foreach(&cmd->field_name, it) {\
     size_t total = strlen(*it) + prefix_len + 1;\
     char* buf = malloc(total);\
     if (!buf) goto defer;\
     ptrs[idx++] = buf;\
     assert(snprintf(buf, total, prefix_str"%s", *it) == (int)total - 1);\
-    vec_push(&cmdline, buf);\
+    arr_push(&cmdline, buf);\
   }
 _BUIC_REPEATING_FIELDS
 #undef X
 
-  vec_merge(&cmdline, &cmd->flags);
-  if (cmd->has_debug) vec_push(&cmdline, "-ggdb");
+  arr_merge(&cmdline, &cmd->flags);
+  if (cmd->has_debug) arr_push(&cmdline, "-ggdb");
 
   const char* output_path = NULL;
   if (cmd->build_dir && *cmd->build_dir) {
@@ -134,11 +140,11 @@ _BUIC_REPEATING_FIELDS
   } else {
     output_path = cmd->output;
   }
-  vec_push(&cmdline, "-o", output_path);
+  arr_push(&cmdline, "-o", output_path);
 
   if (opts.log) {
     printf("[INFO] CMD: ");
-    size_t len = vec_len(&cmdline);
+    size_t len = arr_len(&cmdline);
     for (size_t i = 0; i < len; i++) {
       printf("%s", cmdline.items[i]);
       if (i != len - 1) printf(" ");
@@ -149,7 +155,7 @@ _BUIC_REPEATING_FIELDS
   pid_t pid = fork();
   if (pid == 0) {
     // child
-    vec_push(&cmdline, NULL);
+    arr_push(&cmdline, NULL);
     execvp(cmdline.items[0], (char* const*)cmdline.items);
     perror("execvp");
     exit(1);
@@ -181,17 +187,17 @@ defer:
     if (ptrs[i] == NULL) continue;
     free((void*)ptrs[i]);
   }
-  vec_free(&cmdline);
+  arr_free(&cmdline);
   return ok;
 }
 
 bool cmd_reset(CommandBuilder* cmd) {
-  vec_free(&cmd->flags);
-  vec_free(&cmd->defines);
-  vec_free(&cmd->inputs);
-  vec_free(&cmd->libs);
-  vec_free(&cmd->include_paths);
-  vec_free(&cmd->lib_paths);
+  arr_free(&cmd->flags);
+  arr_free(&cmd->defines);
+  arr_free(&cmd->inputs);
+  arr_free(&cmd->libs);
+  arr_free(&cmd->include_paths);
+  arr_free(&cmd->lib_paths);
   *cmd = (CommandBuilder){0};
   return true;
 }

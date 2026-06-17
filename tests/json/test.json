@@ -1,4 +1,6 @@
 {
+  "12": true,
   "key": -12.3,
-  "nested": [1, 2, 3]
+  "kesn\nsdffd": true,
+  "nested": ["boz\n", 2, 3]
 }

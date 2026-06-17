@@ -1,6 +1,10 @@
 #ifndef FUTIL_H
 #define FUTIL_H
 
+#ifdef _MSC_VER
+  #error "This header does not support MSVC, please don't use garbage slop compilers."
+#endif
+
 #ifdef __cplusplus
   #define FUTILDEF extern "C"
 #else
@@ -12,7 +16,10 @@
 #include "str.h"
 #include "either.h"
 
+#ifndef __Result_String_defined
+#define __Result_String_defined
 DECL_RESULT(String, String);
+#endif /* __Result_String_defined */
 
 FUTILDEF Result(String) read_entire_file(const char* path);
 FUTILDEF ErrorOrNot mkdir_if_not_exists(const char* path);

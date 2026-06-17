@@ -1,5 +1,5 @@
 #include <stdio.h>
-#define VECTOR_IMPLEMENTATION
+#define ARRAY_IMPLEMENTATION
 #define BUIC_IMPLEMENTATION
 #define FUTIL_IMPLEMENTATION
 #define EITHER_IMPLEMENTATION
@@ -8,7 +8,7 @@
 #include <futil.h>
 #include <either.h>
 #include <str.h>
-#include <vector.h>
+#include <array.h>
 
 #define BUILD_DIR "build/"
 
@@ -18,11 +18,11 @@ int main() {
     .compiler = BCCOMP_NATIVE, .has_debug = true,
     .output = "app", .src_path = "src", .build_dir = BUILD_DIR,
   };
-  vec_push(&cmd.inputs, "test.c");
-  vec_push(&cmd.defines, "urmom");
+  arr_push(&cmd.inputs, "test.c");
+  arr_push(&cmd.defines, "urmom");
   if (!cmd_run(&cmd)) return 1;
 
-  vec_push(&cmd.inputs, "main.c");
+  arr_push(&cmd.inputs, "main.c");
   cmd.output = "build/main";
   cmd.compiler = BCCOMP_CLANG;
   cmd.has_debug = true;
