@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-3.0-only */
 #ifndef EITHER_H
 #define EITHER_H
 
@@ -13,7 +14,6 @@
   Instead, use (for int*) int_ptr or if you have a special pointer type
   define typedef of it. Because something like this: Result(int*)
   gives some errors. But this is safe: Result(int_ptr)
-  And it comes with some tools for development like TODO or UNREACHABLE macros
 */
 
 #ifdef __cplusplus
@@ -49,22 +49,6 @@ typedef struct {
 } Error;
 
 EITHERDEF const char* err_tostr(ErrorCode err_code);
-
-/* TODO macro, use this for not-implemented features */
-#define TODO(fmt, ...) \
-  do { \
-    fprintf(stderr, "%s:%d: TODO: "fmt"\n", __FILE__, __LINE__, ##__VA_ARGS); \
-    abort(); \
-  } while (0)
-
-/* UNREACHABLE macro, use it for regions that are not meant to be reached */
-#define UNREACHABLE(fmt, ...) \
-  do { \
-    fprintf(stderr, "%s:%d: UNREACHABLE: "fmt"\n", __FILE__, __LINE__, ##__VA_ARGS__); \
-    __builtin_unreachable(); \
-  } while(0)
-
-#define STRINGIFY(macro) #macro
 
 #define MAKE_ERR(ecode, emsg) \
   ((Error){.code=(ecode), .message=(emsg)})
@@ -155,37 +139,16 @@ typedef struct {
 
 // IMPLEMENTATION BEGIN
 #ifdef EITHER_IMPLEMENTATION
+#include <assert.h>
 const char* err_tostr(ErrorCode err_code) {
   switch(err_code) {
 #define X(name, msg) case ERR_##name: return msg;
 ERROR_CODES
 #undef X
-  default: UNREACHABLE("err_tostr");
+  default: return "(no error)";
   }
+  assert(false && "unreachable: err_tostr");
 }
 #endif // EITHER_IMPLEMENTATION
 // IMPLEMENTATION END
 #endif /* EITHER_H */
-
-/*
-  The MIT License
-  Copyright (c) 2026 ilpeN
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
-
-  The above copyright notice and this permission notice shall be included in
-  all copies or substantial portions of the Software.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-  THE SOFTWARE.
-*/

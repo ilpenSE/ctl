@@ -1,5 +1,5 @@
 CC = clang
-CFLAGS = -Wall -Wextra -fPIC
+CFLAGS = -Wall -Wextra -Wno-override-init -Wno-initializer-overrides -fPIC
 
 ifeq ($(d),1)
 	CFLAGS += -ggdb -O0 -fsanitize=memory
@@ -8,20 +8,25 @@ else
 endif
 
 BUILD = build
-LIB_NAME = libcutils
+SRC = src
+LIB_NAME = libctl
 VERSION = 1.0.0
+BUILD_SCRIPT = build.c
+
 OBJECT = $(BUILD)/lib/$(LIB_NAME).o
 DYN_LIB = $(BUILD)/lib/$(LIB_NAME).so.$(VERSION)
 STC_LIB = $(BUILD)/lib/$(LIB_NAME).a
+
 HEADERS = \
 	either.h \
 	array.h \
 	sv.h \
 	str.h \
 	futil.h \
-	buic.h
-SRC = build.c
-
+	buic.h \
+	json.h \
+	basic.h
+HEADERS_SRC = $(addprefix $(SRC)/, $(HEADERS))
 TRIMMED = $(addprefix $(BUILD)/include/, $(HEADERS))
 
 all: $(DYN_LIB) $(STC_LIB) $(BUILD) $(TRIMMED)
@@ -32,8 +37,8 @@ $(BUILD):
 	mkdir -p $(BUILD)/include
 	mkdir -p $(BUILD)/lib
 
-$(OBJECT): $(SRC) $(HEADERS) | $(BUILD)
-	$(CC) $(CFLAGS) -c $< -o $@
+$(OBJECT): $(BUILD_SCRIPT) $(HEADERS_SRC) | $(BUILD)
+	$(CC) $(CFLAGS) -I./src -c $< -o $@
 
 $(STC_LIB): $(OBJECT) | $(BUILD)
 	ar rcs $@ $<
@@ -45,15 +50,8 @@ $(DYN_LIB): $(OBJECT) | $(BUILD)
 	ln -s $(LIB_NAME).so.$(VERSION) $(BUILD)/lib/$(LIB_NAME).so || true
 
 define TRIM_RULE
-$(BUILD)/include/$(1): $(1) | $(BUILD)/include
+$(BUILD)/include/$(1): $(SRC)/$(1) | $(BUILD)/include
 	awk ' \
-		BEGIN { \
-			print "/*"; \
-			print "  This file was generated automatically"; \
-			print "  It doesnt have implementation"; \
-			print "*/"; \
-			print ""; \
-		} \
 		/IMPLEMENTATION BEGIN/ {skip=1} \
 		/IMPLEMENTATION END/ {skip=0; next} \
 		!skip \

@@ -9,7 +9,10 @@ int main() {
     return 1;
   }
   Json json = RES_UNWRAP(json_res);
-  // json_dump(&json);
+
+#if 0
+  json_dump(&json);
+#else
   if (!json_parse(&json)) return 1;
   JsonObject obj = json.value.as.object;
   arr_foreach(&obj, it) {
@@ -26,11 +29,15 @@ int main() {
     case JSON_ARRAY:
       snprintf(buf, sizeof(buf), "<array>");
       break;
+    case JSON_STRING:
+      snprintf(buf, sizeof(buf), "%s", pair.value->as.string.data);
+      break;
     default:
       snprintf(buf, sizeof(buf), "unknown");
       break;
     }
     printf("Key: "SV_FMT" => %s\n", SV_ARG(pair.key), buf);
   }
+#endif
   return 0;
 }

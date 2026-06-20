@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -ggdb -I../..
+CFLAGS = -Wall -Wextra -ggdb -I../../src/
 
 BUILD = build
 TARGET = $(BUILD)/app
@@ -7,8 +7,8 @@ SRCS := $(shell find . -name '*.c')
 HEADERS := $(shell find . -name '*.h')
 OBJS := $(patsubst %.c, $(BUILD)/%.o, $(SRCS))
 
-DEPENDECIES = ../../str.h \
-              ../../sv.h
+DEPENDECIES = ../../src/str.h \
+              ../../src/sv.h
 
 all: $(BUILD) $(TARGET)
 

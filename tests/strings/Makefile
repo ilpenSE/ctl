@@ -1,8 +1,8 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -Wno-override-init -ggdb -DSTR_IMPLEMENTATION -DSV_IMPLEMENTATION -I../../
+CFLAGS = -Wall -Wextra -Wno-override-init -ggdb -DSTR_IMPLEMENTATION -DSV_IMPLEMENTATION -I../../src/
 
-STR_H = ../../str.h
-SV_H = ../../sv.h
+STR_H = ../../src/str.h
+SV_H = ../../src/sv.h
 BUILD = build
 
 TARGETS = lifecycle \

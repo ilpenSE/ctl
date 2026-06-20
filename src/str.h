@@ -1,67 +1,17 @@
+/* SPDX-License-Identifier: GPL-3.0-only */
 #ifndef STR_H
 #define STR_H
 
-#ifdef _MSC_VER
-  #error "This header does not support MSVC, please don't use garbage slop compilers."
+#ifdef __cplusplus
+  #define STRDEF extern "C"
+#else
+  #define STRDEF extern
 #endif
 
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
-
-#ifdef __cplusplus
-#define STRDEF extern "C"
-#else
-#define STRDEF extern
-#endif
-
-/* Custom malloc, realloc and free function types (if you have some sort of an arena) */
-#ifndef __str_allocator_t_defined
-#define __str_allocator_t_defined
-typedef void* (*str_allocator_t)(size_t);
-#endif /* __str_allocator_t_defined */
-
-#ifndef __str_reallocator_t_defined
-#define __str_reallocator_t_defined
-typedef void* (*str_reallocator_t)(void*, size_t);
-#endif /* __str_reallocator_t_defined */
-
-#ifndef __str_freer_t_defined
-#define __str_freer_t_defined
-typedef void  (*str_freer_t)(void*);
-#endif /* __str_freer_t_defined */
-
-#ifndef __StringMemory_defined
-#define __StringMemory_defined
-typedef struct {
-  str_allocator_t allocator;
-  str_reallocator_t reallocator;
-  str_freer_t freer;
-} StringMemory;
-#endif
-
-#ifndef __String_defined
-#define __String_defined
-typedef struct {
-  char* data;
-  size_t len; /* does not include \0 */
-  size_t cap;
-  StringMemory memory;
-} String;
-#endif /* __String_defined */
-
-#ifndef __StringView_defined
-#define __StringView_defined
-typedef struct {
-  const char* data; /* not null terminated */
-  size_t len;
-} StringView;
-#endif /* __StringView_defined */
-
-#ifndef __uchar_t_defined
-typedef unsigned char uchar_t;
-#define __uchar_t_defined
-#endif
+#include "basic.h"
 
 #define str_foreach(s, name) for(char* name = (s)->data; name < (s)->data + (s)->len; name++)
 
@@ -71,12 +21,6 @@ typedef unsigned char uchar_t;
   Like: bool str_reserve(NULL, 10); RESULTS WITH UNDEFINED BEHAVIOR!
   It's your responsibility to check them
 */
-
-/*
-  Bridge functions between str.h and sv.h
-  String must be defined, including str.h defines it
-*/
-#ifdef __StringView_defined
 /*
   Converts StringView into heap-allocated String
   Allocates memory for String, copies StringView's data and length
@@ -84,7 +28,6 @@ typedef unsigned char uchar_t;
 #define str_from_sv(sv, ...) \
   str_from_sv_impl(sv, (StringMemory){__VA_ARGS__})
 STRDEF String str_from_sv_impl(const StringView* sv, StringMemory memory);
-#endif /* __StringView_defined */
 
 /*
   Makes and returns string struct from C-strings with length
@@ -509,26 +452,3 @@ char* str_to_cstr(const String* s) {
 #endif // STR_IMPLEMENTATION
 // IMPLEMENTATION END
 #endif /* STR_H */
-
-/*
-  The MIT License
-  Copyright (c) 2026 ilpeN
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
-
-  The above copyright notice and this permission notice shall be included in
-  all copies or substantial portions of the Software.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-  THE SOFTWARE.
-*/

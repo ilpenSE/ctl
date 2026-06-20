@@ -1,10 +1,10 @@
 CC = clang
-CFLAGS = -Wall -Wextra -I../../
+CFLAGS = -Wall -Wextra -I../../src/
 
 BUILD = build
 TARGET = $(BUILD)/app
 SRC = main.c ints.c strings.c
-ARRAY_H = ../../array.h
+ARRAY_H = ../../src/array.h
 
 EMPTY_TARGET = $(BUILD)/empty
 EMPTY_SRC = empty.c

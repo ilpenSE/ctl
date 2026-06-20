@@ -1,9 +1,6 @@
+/* SPDX-License-Identifier: GPL-3.0-only */
 #ifndef FUTIL_H
 #define FUTIL_H
-
-#ifdef _MSC_VER
-  #error "This header does not support MSVC, please don't use garbage slop compilers."
-#endif
 
 #ifdef __cplusplus
   #define FUTILDEF extern "C"
@@ -13,13 +10,9 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include "basic.h"
 #include "str.h"
 #include "either.h"
-
-#ifndef __Result_String_defined
-#define __Result_String_defined
-DECL_RESULT(String, String);
-#endif /* __Result_String_defined */
 
 FUTILDEF Result(String) read_entire_file(const char* path);
 FUTILDEF ErrorOrNot mkdir_if_not_exists(const char* path);
@@ -123,26 +116,3 @@ size_t count_lines_from_file(const char* file_path) {
 #endif // FUTIL_IMPLEMENTATION
 // IMPLEMENTATION END
 #endif /* FUTIL_H */
-
-/*
-  The MIT License
-  Copyright (c) 2026 ilpeN
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
-
-  The above copyright notice and this permission notice shall be included in
-  all copies or substantial portions of the Software.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-  THE SOFTWARE.
-*/

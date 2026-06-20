@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-3.0-only */
 #ifndef ARRAY_H
 #define ARRAY_H
 
@@ -44,22 +45,6 @@
 
 #define ARR_INITIAL_CAPACITY 64
 static_assert(ARR_INITIAL_CAPACITY > 1, "ARR_INITIAL_CAPACITY must be >1");
-
-/* Predefined typedefs to use in DECL_ARRAY and Array() */
-#ifndef __char_ptr_defined
-#define __char_ptr_defined
-typedef char* char_ptr;
-#endif
-
-#ifndef __cchar_ptr_defined
-#define __cchar_ptr_defined
-typedef const char* cchar_ptr;
-#endif
-
-#ifndef __int_ptr_defined
-#define __int_ptr_defined
-typedef int* int_ptr;
-#endif
 
 #ifndef __arr_allocator_t_defined
 #define __arr_allocator_t_defined
@@ -300,26 +285,3 @@ bool _arr_merge(ArrayGeneric v1, ArrayGeneric v2) {
 #endif // ARRAY_IMPLEMENTATION
 // IMPLEMENTATION END
 #endif /* ARRAY_H */
-
-/*
-  The MIT License
-  Copyright (c) 2026 ilpeN
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
-
-  The above copyright notice and this permission notice shall be included in
-  all copies or substantial portions of the Software.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-  THE SOFTWARE.
-*/

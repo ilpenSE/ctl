@@ -1,9 +1,6 @@
+/* SPDX-License-Identifier: GPL-3.0-only */
 #ifndef SV_H
 #define SV_H
-
-#ifdef _MSC_VER
-  #error "This header does not support MSVC, please don't use garbage slop compilers."
-#endif
 
 #ifdef __cplusplus
   #define SVDEF extern "C"
@@ -13,63 +10,7 @@
 
 #include <string.h>
 #include <stddef.h>
-
-#ifndef __StringView_defined
-#define __StringView_defined
-typedef struct {
-  const char* data; /* not null terminated */
-  size_t len;
-  bool looking_heap; /* Set this to true when data looks to heap-allocated region's head */
-} StringView;
-#endif
-
-/* Custom malloc, realloc and free function types (if you have some sort of an arena) */
-#ifndef __str_allocator_t_defined
-#define __str_allocator_t_defined
-typedef void* (*str_allocator_t)(size_t);
-#endif /* __str_allocator_t_defined */
-
-#ifndef __str_reallocator_t_defined
-#define __str_reallocator_t_defined
-typedef void* (*str_reallocator_t)(void*, size_t);
-#endif /* __str_reallocator_t_defined */
-
-#ifndef __str_freer_t_defined
-#define __str_freer_t_defined
-typedef void  (*str_freer_t)(void*);
-#endif /* __str_freer_t_defined */
-
-#ifndef __StringMemory_defined
-#define __StringMemory_defined
-typedef struct {
-  str_allocator_t allocator;
-  str_reallocator_t reallocator;
-  str_freer_t freer;
-} StringMemory;
-#endif
-
-#ifndef __String_defined
-#define __String_defined
-typedef struct {
-  char* data;
-  size_t len; /* does not include \0 */
-  size_t cap;
-  StringMemory memory;
-} String;
-#endif
-
-#ifndef __StringSlice_defined
-#define __StringSlice_defined
-typedef struct {
-  size_t start;
-  size_t end;
-} StringSlice;
-#endif
-
-#ifndef __uchar_t_defined
-typedef unsigned char uchar_t;
-#define __uchar_t_defined
-#endif
+#include "basic.h"
 
 #define SV_ARG(sv) (int)(sv).len, (sv).data
 #define SV_FMT "%.*s"
@@ -311,26 +252,3 @@ StringView sv_trim(StringView sv) {
 #endif // SV_IMPLEMENTATION
 // IMPLEMENTATION END
 #endif /* SV_H */
-
-/*
-  The MIT License
-  Copyright (c) 2026 ilpeN
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
-
-  The above copyright notice and this permission notice shall be included in
-  all copies or substantial portions of the Software.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-  THE SOFTWARE.
-*/

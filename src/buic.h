@@ -1,16 +1,10 @@
+/* SPDX-License-Identifier: GPL-3.0-only */
 #ifndef BUIC_H
 #define BUIC_H
 
-#ifdef _MSC_VER
-  #error "This header does not support MSVC, please don't use garbage slop compilers."
-#endif
-
 #include <stdbool.h>
+#include "basic.h"
 #include "array.h"
-
-DECL_ARRAY(const char*, const_char_ptr);
-typedef const char* const_char_ptr;
-typedef Array(const_char_ptr) Array_cstr;
 
 typedef enum {
   BCCOMP_NATIVE = 0,
@@ -21,12 +15,12 @@ typedef enum {
 } BuildCompiler;
 
 typedef struct {
-  Array_cstr flags; // custom (arbitrary) flags
-  Array_cstr defines; // -D OR /D
-  Array_cstr inputs;
-  Array_cstr include_paths; // /include -> -I./include
-  Array_cstr lib_paths; // /lib -> -L./lib
-  Array_cstr libs; // -l:libmylib.so
+  Array(cchar_ptr) flags; // custom (arbitrary) flags
+  Array(cchar_ptr) defines; // -D OR /D
+  Array(cchar_ptr) inputs;
+  Array(cchar_ptr) include_paths; // /include -> -I./include
+  Array(cchar_ptr) lib_paths; // /lib -> -L./lib
+  Array(cchar_ptr) libs; // -l:libmylib.so
   const char* src_path; // /src -> main.c -> src/main.c
   const char* build_dir;
   const char* output;
@@ -79,7 +73,7 @@ const char* bcomp_to_cstr(BuildCompiler compiler) {
 
 bool cmd_run_opt(CommandBuilder* cmd, CommandRunOptions opts) {
   bool ok = false;
-  Array_cstr cmdline = {0};
+  Array(cchar_ptr) cmdline = {0};
   const char* ptrs[8] = {0};
   size_t idx = 0;
   if (!cmd) goto defer;
