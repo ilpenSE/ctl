@@ -487,6 +487,8 @@ fail:
   return RES_ERR(JsonObject, ERR_INTERNAL);
 }
 
+#include <math.h>
+
 Result(JsonValue) jps_parse_value(Json* json) {
   JsonToken tok = json->ps_curr;
   JsonValue val = {0};
@@ -499,10 +501,70 @@ Result(JsonValue) jps_parse_value(Json* json) {
     val.as.string = str;
   } break;
   case JTK_NUMBER: {
-    // TODO: Interpret the number
+    // TODO: Develop this (fix leading zeros, dangling dots)
+    // These are passing: (should not pass)
+    // 013
+    // 13.
+    // 13.e
+    // 13e1.2
     val.type = JSON_NUMBER;
-    String str = str_from_sv(&tok.lexeme, JSON_STR_MEMORY_MANAGER_FLAT);
-    val.as.number = strtod(str.data, NULL);
+    double result = 0.0;
+    StringView view = tok.lexeme;
+    assert(view.len >= 1);
+    int sign = 1;
+    int exp = 0, exp_sign = 1;
+    int scale = 1;
+    int state = 0; // 0 int, 1 frac, 2 exp
+    double value = 0.0;
+
+    for (int i = 0; i < (int)view.len; i++) {
+      char c = view.data[i];
+      if (c == 'e' || c == 'E') {
+        if (state == 2) {
+          jps_report_error(tok, "Duplication of '%c' symbol.", c);
+          goto fail;
+        }
+        state = 2;
+        continue;
+      } else if (c == '.') {
+        if (state == 1) {
+          jps_report_error(tok, "Duplication of '%c' symbol.", c);
+          goto fail;
+        }
+        state = 1;
+        continue;
+      } else if (c == '-') {
+        if (i == 0) {
+          sign = -1;
+          continue;
+        }
+        char back = view.data[i - 1];
+        if (state == 2) {
+          if (back == 'E' || back == 'e') exp_sign = -1;
+          else {
+            jps_report_error(tok, "Invalid location of '-' in exponent.");
+            goto fail;
+          }
+        } else {
+          jps_report_error(tok, "Invalid location of '-' in number.");
+          goto fail;
+        }
+      } else if ('0' <= c && c <= '9') {
+        int n = c - '0';
+        if (state == 2) {
+          exp = exp * 10 + n;
+          continue;
+        }
+        if (state == 1) scale *= 10;
+        value = value * 10 + n;
+      } else {
+        jps_report_error(tok, "Unexpected symbol '%c' in number format.", c);
+        goto fail;
+      }
+    }
+
+    result = (value / scale) * pow(10, exp * exp_sign) * sign;
+    val.as.number = result;
   } break;
   case JTK_TRUE: {val.type = JSON_TRUE; val.as.boolean = true;} break;
   case JTK_FALSE: {val.type = JSON_FALSE; val.as.boolean = false;} break;
