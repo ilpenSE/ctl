@@ -674,7 +674,7 @@ bool json_unwrap_boolean(const JsonValue* json_value) {
 
 // Object
 bool json_is_object(const JsonValue* json_value) {
-  return json_value->type == JSON_TRUE || json_value->type == JSON_FALSE;
+  return json_value->type == JSON_OBJECT;
 }
 Result(JsonObject) json_as_object(const JsonValue* json_value) {
   if (!json_is_object(json_value)) return RES_ERR(JsonObject, ERR_INVALID_ARG);
@@ -686,7 +686,7 @@ JsonObject json_unwrap_object(const JsonValue* json_value) {
 
 // Array
 bool json_is_array(const JsonValue* json_value) {
-  return json_value->type == JSON_TRUE || json_value->type == JSON_FALSE;
+  return json_value->type == JSON_ARRAY;
 }
 Result(JsonArray) json_as_array(const JsonValue* json_value) {
   if (!json_is_array(json_value)) return RES_ERR(JsonArray, ERR_INVALID_ARG);
