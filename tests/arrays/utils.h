@@ -1,9 +1,7 @@
 #pragma once
+#include <basic.h>
 
-#define STRINGIFY(x) #x
-
-DECL_ARRAY(int, int);
-DECL_ARRAY(char*, char_ptr);
+DECL_ARRAY(int);
 
 int test_strings();
 int test_ints();

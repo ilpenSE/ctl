@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include <futil.h>
-#include <either.h>
+#define CTL_IMPLEMENTATION
+#include <ctl.h>
 
 // Trailing slash is mandatory
 #define DIRECTORY_TEST "folder/"

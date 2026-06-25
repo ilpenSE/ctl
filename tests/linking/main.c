@@ -1,6 +1,5 @@
 #include <stdio.h>
-#include <str.h>
-#include <futil.h>
+#include <ctl.h>
 
 #define give_err(res, fmt, ...) \
   do { \

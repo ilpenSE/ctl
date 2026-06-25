@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include <json.h>
-#include <either.h>
+#define CTL_IMPLEMENTATION
+#include <ctl.h>
 
 int main() {
   Result(Json) json_res = json_read("test.json");
@@ -15,7 +15,7 @@ int main() {
 #else
   if (!json_parse(&json)) return 1;
   JsonObject obj = json.value.as.object;
-  arr_foreach(&obj, it) {
+  arr_foreach(obj, it) {
     JsonPair pair = *it;
     char buf[1024];
     switch(pair.value->type) {

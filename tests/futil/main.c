@@ -1,7 +1,7 @@
 #include <stdio.h>
 
-#include <futil.h>
-#include <either.h>
+#define CTL_IMPLEMENTATION
+#include <ctl.h>
 
 #define BUILD_PATH "build/"
 #define FILE1_PATH BUILD_PATH"file2.txt"
@@ -10,7 +10,7 @@
 int main() {
   Result(String) res = read_entire_file(FILE2_PATH);
   if (RES_ISERR(res)) {
-    fprintf(stderr, "Couldn't read entire file: %s: %s\n", FILE2_PATH, err_tostr(RES_GETE(res)));
+    fprintf(stderr, "Couldn't read entire file: %s: %s\n", FILE2_PATH, err_tostr(RES_GETE(res).code));
     return 1;
   }
   String s = RES_UNWRAP(res);

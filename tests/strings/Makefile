@@ -1,8 +1,7 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -Wno-override-init -ggdb -DSTR_IMPLEMENTATION -DSV_IMPLEMENTATION -I../../src/
+CFLAGS = -Wall -Wextra -Wno-override-init -ggdb -DCTL_IMPLEMENTATION -I../../ -lm
 
-STR_H = ../../src/str.h
-SV_H = ../../src/sv.h
+CTL_H = ../../ctl.h
 BUILD = build
 
 TARGETS = lifecycle \
@@ -12,7 +11,8 @@ TARGETS = lifecycle \
           views \
           equals \
           empty \
-          chop 
+          chop \
+          join
 
 .PHONY: all clean $(TARGETS)
 all: $(BUILD) $(addprefix $(BUILD)/, $(TARGETS))
@@ -22,7 +22,7 @@ $(TARGETS): %: $(BUILD)/%
 $(BUILD):
 	mkdir -p $(BUILD)
 
-$(BUILD)/%: %.c $(STR_H) $(SV_H) | $(BUILD)
+$(BUILD)/%: %.c $(CTL_H) | $(BUILD)
 	$(CC) $(CFLAGS) -o $@ $<
 
 clean:

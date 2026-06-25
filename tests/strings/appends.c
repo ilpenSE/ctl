@@ -28,7 +28,7 @@ int main() {
   String b = str_new("ab");
   str_repeat(&b, 15);
   print_str(&b);
-  
+
   str_free(&s);
   str_free(&a);
   str_free(&b);

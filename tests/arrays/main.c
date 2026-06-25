@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
 }
 
 void print_int_array(Array(int)* v) {
-  size_t len = arr_len(v);
+  size_t len = arr_len(*v);
   printf(STRINGIFY(Array(int)) "{items: [");
   if (v->items) {
     for (size_t i = 0; i < len; i++) {
@@ -30,12 +30,12 @@ void print_int_array(Array(int)* v) {
     }
   }
   printf("], ");
-  printf("capacity: %zu, ", arr_cap(v));
+  printf("capacity: %zu, ", arr_cap(*v));
   printf("length: %zu}\n", len);
 }
 
 void print_cstr_array(Array(char_ptr)* v) {
-  size_t len = arr_len(v);
+  size_t len = arr_len(*v);
   printf(STRINGIFY(Array(char_ptr)) "{items: [");
   if (v->items) {
     for (size_t i = 0; i < len; i++) {
@@ -46,6 +46,6 @@ void print_cstr_array(Array(char_ptr)* v) {
     }
   }
   printf("], ");
-  printf("capacity: %zu, ", arr_cap(v));
+  printf("capacity: %zu, ", arr_cap(*v));
   printf("length: %zu}\n", len);
 }

@@ -3,13 +3,12 @@
 #include <string.h>
 #include <either.h>
 
-// You declare the types and their names
-// You can define arbitrary names like cc_ptr or c_ptr
-// BUT use them in return expressions
-// AND ONLY use alphanumeric and _ in names
-DECL_EITHER(const char*, cc_ptr, int, int);
-DECL_RESULT(char*, c_ptr);
-DECL_OPTION(size_t, size_t);
+typedef const char* cc_ptr;
+typedef char* c_ptr;
+
+DECL_EITHER(cc_ptr, int);
+DECL_RESULT(c_ptr);
+DECL_OPTION(size_t);
 
 Either(cc_ptr, int) doEither(int x) {
   if (x == 0) return EITHER_L(cc_ptr, int, "Hello");
@@ -45,7 +44,7 @@ int main() {
   printf("Violent right check in eitha: %d\n", EITHER_GETR(a));
   if (a.is_left) printf("Either is left!!!: %s\n", a.as.left);
   else printf("Either is RIGHT!!!::: %d\n", a.as.right);
-  
+
   // RESULTS
   printf("\n=== RESULTS ===\n");
   Result(c_ptr) b = doResult(1); // "Hello!" in char*

@@ -1,29 +1,13 @@
-/* SPDX-License-Identifier: GPL-3.0-only */
-#ifndef FUTIL_H
-#define FUTIL_H
-
-#ifdef __cplusplus
-  #define FUTILDEF extern "C"
-#else
-  #define FUTILDEF extern
-#endif
+#include <futil.h>
+#include <basic.h>
+#include <str.h>
+#include <either.h>
 
 #include <stddef.h>
+#include <stdarg.h>
 #include <stdbool.h>
-#include "basic.h"
-#include "str.h"
-#include "either.h"
-
-FUTILDEF Result(String) read_entire_file(const char* path);
-FUTILDEF ErrorOrNot mkdir_if_not_exists(const char* path);
-FUTILDEF bool is_valid_path(const char* path);
-
-FUTILDEF size_t count_lines_from_file(const char* file_path);
-FUTILDEF size_t count_lines_from_str(const String* s);
-
-// IMPLEMENTATION BEGIN
-#ifdef FUTIL_IMPLEMENTATION
 #include <stdio.h>
+#include <string.h>
 #include <errno.h>
 
 #if defined(__unix__) || defined(__APPLE__)
@@ -33,6 +17,7 @@ FUTILDEF size_t count_lines_from_str(const String* s);
   #ifdef _WIN32
     #define WIN32_LEAN_AND_MEAN
     #include <windows.h>
+    #include <direct.h>
     #ifndef PATH_MAX
       #define PATH_MAX MAX_PATH
     #endif
@@ -72,6 +57,23 @@ bool is_valid_path(const char* path) {
   return true;
 }
 
+bool concat_path_impl(String* path, const char* first, ...) {
+  if (!first) return false;
+  str_cat(path, first);
+  va_list args;
+  va_start(args, first);
+  const char* arg;
+  while ((arg = va_arg(args, const char*)) != NULL) {
+    size_t arg_len = strlen(arg);
+    if (arg[arg_len - 1] != PATH_SEP) {
+      str_append(path, PATH_SEP);
+    }
+    str_cat(path, arg);
+  }
+  va_end(args);
+  return true;
+}
+
 Result(String) read_entire_file(const char* file_path) {
   FILE* f = fopen(file_path, "rb");
   if (!f) return RES_ERR(String, ERR_NO_SUCH_FILE);
@@ -98,7 +100,7 @@ fail_close:
 
 size_t count_lines_from_str(const String* s) {
   size_t lines = 0;
-  str_foreach(s, it) {
+  str_foreach(*s, it) {
     if (*it == '\n') lines += 1;
   }
   return lines;
@@ -112,7 +114,3 @@ size_t count_lines_from_file(const char* file_path) {
   str_free(&s);
   return lines;
 }
-
-#endif // FUTIL_IMPLEMENTATION
-// IMPLEMENTATION END
-#endif /* FUTIL_H */

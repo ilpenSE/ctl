@@ -1,10 +1,10 @@
 CC = clang
-CFLAGS = -Wall -Wextra -ggdb -fsanitize=memory -I../../src/ -DFUTIL_IMPLEMENTATION -DSTR_IMPLEMENTATION -DEITHER_IMPLEMENTATION
+CFLAGS = -Wall -Wextra -Wno-initializer-overrides -ggdb -fsanitize=memory -I../../
 
 BUILD = build
 TARGET = $(BUILD)/app
 SRC = directories.c
-# SRC = main.c
+SRC = main.c
 
 all: $(TARGET) $(BUILD)
 

@@ -15,9 +15,20 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdarg.h>
 #include "array.h"
 #include "either.h"
+
+#if defined(__unix__) || defined(__unix)
+  #define PLATFORM_UNIX 1
+  #define PLATFORM_POSIX 1
+#elif defined(__APPLE__) || defined(__MACH__)
+  #define PLATFORM_APPLE 1
+  #define PLATFORM_POSIX 1
+#elif defined(_WIN32)
+  #define PLATFORM_WINDOWS 1
+#endif
 
 /* Custom malloc, realloc and free function types (if you have some sort of an arena) */
 #ifndef __str_allocator_t_defined
@@ -72,17 +83,17 @@ typedef struct {
 
 #ifndef __Result_String_defined
 #define __Result_String_defined
-DECL_RESULT(String, String);
+DECL_RESULT(String);
 #endif
 
 #ifndef __Result_double_defined
 #define __Result_double_defined
-DECL_RESULT(double, double);
+DECL_RESULT(double);
 #endif
 
 #ifndef __Result_bool_defined
 #define __Result_bool_defined
-DECL_RESULT(bool, bool);
+DECL_RESULT(bool);
 #endif
 
 /* Predefined typedefs to use in DECL_ARRAY and Array() */
@@ -109,7 +120,12 @@ typedef unsigned char uchar_t;
 /* Array declerations */
 #ifndef __Array_cchar_ptr_defined
 #define __Array_cchar_ptr_defined
-DECL_ARRAY(const char*, cchar_ptr);
+DECL_ARRAY(cchar_ptr);
+#endif
+
+#ifndef __Array_char_ptr_defined
+#define __Array_char_ptr_defined
+DECL_ARRAY(char_ptr);
 #endif
 
 /* Utility macros */
@@ -130,9 +146,7 @@ DECL_ARRAY(const char*, cchar_ptr);
 #define STRINGIFY(macro) #macro
 
 /* Temporary buffer */
-#define _BASIC_TEMP_BUFFER_SIZE 1024
-char _basic_temp[_BASIC_TEMP_BUFFER_SIZE];
-size_t _basic_temp_len = 0;
+#define BASIC_TEMP_BUFFER_SIZE 1025
 
 /* Math */
 #define _BASIC_TYPES_WITH_BITS(X) \
@@ -149,8 +163,10 @@ size_t _basic_temp_len = 0;
 /* Declerations */
 BASICDEF char* temp_sprintf(const char* fmt, ...);
 BASICDEF char* temp_vsprintf(const char* fmt, va_list args);
+BASICDEF size_t temp_len();
 BASICDEF void temp_reset();
 BASICDEF void temp_clear();
+BASICDEF const char* argv_shift(int* argc, char*** argv);
 
 #define _BASIC_CLAMP_DECLARATION(TName, T) \
   T clamp##TName(T a, T lower, T upper); \
@@ -163,44 +179,4 @@ _BASIC_TYPES_WITH_BITS(_BASIC_CLAMP_DECLARATION)
     default: clampi32 \
 )(a, lower, upper)
 
-// IMPLEMENTATION BEGIN
-#ifdef BASIC_IMPLEMENTATION
-#include <string.h>
-#include <stdio.h>
-// Temp
-char* temp_sprintf(const char* fmt, ...) {
-  va_list args;
-  va_start(args, fmt);
-  char* result = temp_vsprintf(fmt, args);
-  va_end(args);
-  return result;
-}
-
-char* temp_vsprintf(const char* fmt, va_list args) {
-  int n = vsnprintf(_basic_temp, sizeof(_basic_temp), fmt, args);
-  if (n < 0) return NULL;
-  _basic_temp_len = clamp((size_t)n + _basic_temp_len, 0, _basic_temp_len);
-  return _basic_temp;
-}
-
-void temp_reset() {
-  _basic_temp[0] = '\0';
-  _basic_temp_len = 0;
-}
-
-void temp_clear() {
-  memset(_basic_temp, 0, sizeof(_basic_temp));
-  _basic_temp_len = 0;
-}
-
-// Math
-#define X(TName, T) \
-  T clamp##TName(T a, T lower, T upper) { \
-    return a > upper ? upper : a < lower ? lower : a; \
-  }
-_BASIC_TYPES_WITH_BITS(X)
-#undef X
-
-#endif // BASIC_IMPLEMENTATION
-// IMPLEMENTATION END
 #endif /* BASIC_H */

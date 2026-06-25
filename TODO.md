@@ -1,6 +1,8 @@
-# TODO for CUTILS
+# TODO for CTL
 
-- [x] Add build system in C (nobuild idea)
+- [ ] Add proper documentation (manpages or static website)
+- [ ] Add incremental build and depedencies in buic
+- [ ] Add parallel build in buic
 - [ ] Add hash table implementation
-- [x] Add json deserializer
 - [ ] Add json serializer
+- [ ] Add subcommand api (with flag parsers)

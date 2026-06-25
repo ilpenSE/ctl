@@ -34,7 +34,7 @@ int test_ints() {
   TEST_SEPERATOR;
 
   printf("foreach: [");
-  arr_foreach(&vec, it) {
+  arr_foreach(vec, it) {
     printf("%d, ", *it);
   }
   printf("]\n");

@@ -35,7 +35,7 @@ int test_strings() {
   // You cannot use vec after free
   // Simply, functions return falsy values (false, -1 etc.)
   // And you cannot iterate it. If you do, program'll be aborted with assertion failure
-  printf("Is vec freed: %s\n", arr_isfreed(&vec) ? "YES" : "NO"); // YES
+  printf("Is vec freed: %s\n", arr_isfreed(vec) ? "YES" : "NO"); // YES
 #if 1
   char** s = arr_at(&vec, 0); // ptr to the element (can be NULL if vec is freed or out-of-bounds)
   if (s) printf("%s\n", *s);

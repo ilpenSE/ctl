@@ -1,5 +1,5 @@
 CC = clang
-BUILD = ../../build
+BUILD = ../../.build
 CFLAGS = -Wall -Wextra -ggdb -I$(BUILD)/include
 # FUCK GNU LINKER
 LDFLAGS = -L$(BUILD)/lib -Wl,-rpath,$(BUILD)/lib
@@ -8,4 +8,4 @@ SRC = main.c
 TARGET = app
 
 $(TARGET): $(SRC) Makefile
-	$(CC) $(CFLAGS) $(LDFLAGS) $(LD_LIBS) $(SRC) -o $(TARGET)
+	$(CC) $(CFLAGS) $(SRC) $(LDFLAGS) $(LD_LIBS) -o $(TARGET)

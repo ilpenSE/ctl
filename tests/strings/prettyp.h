@@ -2,8 +2,7 @@
 #define PRETTY_PRINT_H
 
 #include <stdio.h>
-#include <str.h>
-#include <sv.h>
+#include <ctl.h>
 
 #define COLOR_RED     "\033[0;31m"
 #define COLOR_GREEN   "\033[0;32m"

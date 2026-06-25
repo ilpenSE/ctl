@@ -53,17 +53,27 @@ EITHERDEF const char* err_tostr(ErrorCode err_code);
 #define MAKE_ERR(ecode, emsg) \
   ((Error){.code=(ecode), .message=(emsg)})
 
-/* Either(L, R) holds 2 different typed value */
-#define Either(LName, RName) Either_##LName##_##RName
+/*
+  DISCLAIMER: LT, RT or T is a type name so this means
+  if one of them is pointer, you have to use typedef of it.
+  For example: DECL_EITHER(int*, bool) won't work
+  But, DECL_EITHER(int_ptr, bool) will work
+  This pattern is everywhere I put generic type like "T"
+*/
 
-#define DECL_EITHER(LType, LName, RType, RName) \
+/*
+  Either(L, R) holds 2 different typed value
+*/
+#define Either(LT, RT) Either_##LT##_##RT
+
+#define DECL_EITHER(LT, RT) \
   typedef struct {                              \
     bool is_left;                               \
     union {                                     \
-      LType left;                               \
-      RType right;                              \
+      LT left;                               \
+      RT right;                              \
     } as;                                       \
-  } Either(LName, RName);
+  } Either(LT, RT);
 
 /* Producing Either structs for returns at functions */
 #define EITHER_L(LName, RName, lval)                          \
@@ -80,16 +90,16 @@ EITHERDEF const char* err_tostr(ErrorCode err_code);
 /* we have already is_left field to query value is left or right */
 
 /* Result(T) aka Either(T, Error) (Wrapper of Either) */
-#define Result(TName) Either(TName, Error)
-#define DECL_RESULT(T, TName) DECL_EITHER(T, TName, Error, Error)
+#define Result(T) Either(T, Error)
+#define DECL_RESULT(T) DECL_EITHER(T, Error)
 
 /* Producing Result objects for returns */
-#define RES_OK(TName, val)                      \
-  EITHER_L(TName, Error, (val))
-#define RES_ERR_MSG(TName, errcode, errmsg)         \
-  EITHER_R(TName, Error, MAKE_ERR(errcode, errmsg))
-#define RES_ERR(TName, errcode)         \
-  EITHER_R(TName, Error, MAKE_ERR(errcode, NULL))
+#define RES_OK(T, val)                      \
+  EITHER_L(T, Error, (val))
+#define RES_ERR_MSG(T, errcode, errmsg)         \
+  EITHER_R(T, Error, MAKE_ERR(errcode, errmsg))
+#define RES_ERR(T, errcode)         \
+  EITHER_R(T, Error, MAKE_ERR(errcode, NULL))
 
 /* Unwraps blindly, just unwrap */
 #define RES_UNWRAP(res)                         \
@@ -104,19 +114,19 @@ EITHERDEF const char* err_tostr(ErrorCode err_code);
   (EITHER_GETR((res)))
 
 /* Option(T) */
-#define Option(TName) Option_##TName
+#define Option(T) Option_##T
 
-#define DECL_OPTION(TType, TName)               \
+#define DECL_OPTION(T)               \
   typedef struct {                              \
     bool is_some;                               \
-    TType value;                                \
-  } Option(TName);
+    T value;                                \
+  } Option(T);
 
 /* Producing Option structs for returns */
-#define OPT_SOME(TName, val)                     \
-  ((Option(TName)){ .is_some = true, .value = (val) })
-#define OPT_NONE(TName)                         \
-  ((Option(TName)){ .is_some = false })
+#define OPT_SOME(T, val)                     \
+  ((Option(T)){ .is_some = true, .value = (val) })
+#define OPT_NONE(T)                         \
+  ((Option(T)){ .is_some = false })
 
 /* Unwrap blindly */
 #define OPT_UNWRAP(opt)                         \
@@ -137,18 +147,4 @@ typedef struct {
 #define EON_SUCCESS ((ErrorOrNot){ false, { ERR_NOERR, NULL } })
 #define EON_ERROR(EEnum, EMessage) ((ErrorOrNot){ true, { .code=EEnum, .message=EMessage } })
 
-// IMPLEMENTATION BEGIN
-#ifdef EITHER_IMPLEMENTATION
-#include <assert.h>
-const char* err_tostr(ErrorCode err_code) {
-  switch(err_code) {
-#define X(name, msg) case ERR_##name: return msg;
-ERROR_CODES
-#undef X
-  default: return "(no error)";
-  }
-  assert(false && "unreachable: err_tostr");
-}
-#endif // EITHER_IMPLEMENTATION
-// IMPLEMENTATION END
 #endif /* EITHER_H */
