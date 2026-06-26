@@ -22,6 +22,8 @@ const char* const modules[] = {
 #define BUILD_INC_FOLDER BUILD_FOLDER"include/"
 #define LIB_OUTPUT_NAME BUILD_LIB_FOLDER"libctl"
 
+#define ARTIFACTS_FOLDER "artifacts/"
+
 bool create_folder(const char* folder);
 bool generate_single_header(const char* file_name, bool has_impl);
 bool build(CommandBuilder* cmd, bool is_debug);
@@ -40,10 +42,10 @@ int main(int argc, char** argv) {
   bool is_debug = false;
   bool is_pack = false;
   for (const char* flag = argv_shift(&argc, &argv); flag; flag = argv_shift(&argc, &argv)) {
-    if (strcmp(flag, "-d")) is_debug = true;
-    else if (strcmp(flag, "-D")) is_debug = true;
-    else if (strcmp(flag, "-p")) is_debug = true;
-    else if (strcmp(flag, "-pack")) is_debug = true;
+    if (strcmp(flag, "-d") == 0) is_debug = true;
+    else if (strcmp(flag, "-D") == 0) is_debug = true;
+    else if (strcmp(flag, "-p") == 0) is_pack = true;
+    else if (strcmp(flag, "-pack") == 0) is_pack = true;
     else {
       fprintf(stderr, "ERROR: Unknown option '%s'.\n", flag);
       fprintf(stderr, "  Available flags:\n");
@@ -115,13 +117,15 @@ bool build(CommandBuilder* cmd, bool is_debug)
 }
 
 bool pack(CommandBuilder* cmd) {
-  bool ok = false;
+  if (mkdir_if_not_exists(ARTIFACTS_FOLDER).is_error) return false;
 
-  // TODO: Implement packaging here
+  // Create tarball for x86_64 linux
+  cmd_push(cmd, "tar", "czf", ARTIFACTS_FOLDER"x86_64-linux-gnu.tar.gz");
+  cmd_push(cmd, "--transform=s,^,ctl/,");
+  cmd_push(cmd, BUILD_FOLDER"include/", BUILD_FOLDER"lib/");
+  if (!cmd_run(cmd)) return false;
 
-  ok = true;
-defer:
-  return ok;
+  return true;
 }
 
 bool generate_single_header(const char* file_name, bool has_impl)
