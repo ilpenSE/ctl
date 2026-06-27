@@ -15,6 +15,13 @@
   #define BUICDEF extern
 #endif
 
+/*
+  You can define NATIVE_COMPILER in command line while bootstrapping
+*/
+#ifndef NATIVE_COMPILER
+  #define NATIVE_COMPILER NULL /* Detect compiler in runtime */
+#endif
+
 typedef struct {
   bool reset;
   bool log;
@@ -34,7 +41,9 @@ bool cmd_insta_run_impl(const char* first, ...);
 #define BUIC_REBUILD_URSELF(argc, argv, ...) \
   buic_rebuild_urself((argc), (argv), __FILE__, ##__VA_ARGS__, NULL)
 
-BUICDEF time_t buic_compare_mtimes(const char* f1, const char* f2);
+BUICDEF ctl_time_t buic_compare_mtimes(const char* f1, const char* f2);
 BUICDEF bool buic_rebuild_urself(int argc, char** argv, const char* file_name, const char* first, ...);
+BUICDEF const char* buic_get_native_compiler(void);
+BUICDEF String buic_search_path(const char* bin);
 
 #endif /* BUIC_H */

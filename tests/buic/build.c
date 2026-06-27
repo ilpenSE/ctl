@@ -1,11 +1,12 @@
 #include <stdio.h>
 #define CTL_IMPLEMENTATION
-#include <ctl.h>
+#include "../../ctl.h"
 
 #define BUILD_FOLDER "build/"
 
 int main(int argc, char** argv) {
-  BUIC_REBUILD_URSELF(argc, argv, "-I../../build/include");
+  BUIC_REBUILD_URSELF(argc, argv, "-lm");
+
   if (mkdir_if_not_exists(BUILD_FOLDER).is_error) return 1;
   CommandBuilder cmd = {0};
   cmd_push(&cmd, "clang");

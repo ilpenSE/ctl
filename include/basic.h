@@ -30,6 +30,16 @@
   #define PLATFORM_WINDOWS 1
 #endif
 
+#ifdef PLATFORM_POSIX
+  #include <time.h>
+  typedef time_t ctl_time_t;
+  #define ctl_execvp(file_name, argv) execvp((file_name), (argv))
+#elif defined(PLATFORM_WINDOWS)
+  #include <process.h>
+  typedef long long ctl_time_t;
+  #define ctl_execvp(file_name, argv) _execvp((file_name), (const char* const*)(argv))
+#endif
+
 /* Custom malloc, realloc and free function types (if you have some sort of an arena) */
 #ifndef __str_allocator_t_defined
 #define __str_allocator_t_defined

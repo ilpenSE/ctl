@@ -10,30 +10,6 @@
 #include <string.h>
 #include <errno.h>
 
-#if defined(__unix__) || defined(__APPLE__)
-  #include <sys/stat.h>
-  #include <limits.h>
-#else
-  #ifdef _WIN32
-    #define WIN32_LEAN_AND_MEAN
-    #include <windows.h>
-    #include <direct.h>
-    #ifndef PATH_MAX
-      #define PATH_MAX MAX_PATH
-    #endif
-  #else
-    #error "Platform is not supported."
-  #endif /* _WIN32 */
-#endif /* __unix__ || __APPLE__ */
-
-#ifdef _WIN32
-  #define PATH_SEP '\\'
-  #define FUTIL_MKDIR(path) _mkdir(path)
-#else
-  #define PATH_SEP '/'
-  #define FUTIL_MKDIR(path) mkdir(path, 0775)
-#endif /* _WIN32 */
-
 ErrorOrNot mkdir_if_not_exists(const char* path) {
   if (!is_valid_path(path)) return EON_ERROR(ERR_INVALID_ARG, "Invalid path");
   for (const char* p = path + 1; *p != '\0'; p++) {
@@ -42,7 +18,7 @@ ErrorOrNot mkdir_if_not_exists(const char* path) {
       if (i >= PATH_MAX) return EON_ERROR(ERR_INVALID_ARG, "Path is too long");
       char buf[PATH_MAX] = {0};
       memcpy(buf, path, i);
-      int status = FUTIL_MKDIR(buf);
+      int status = futil_mkdir(buf);
       if (status != 0 && errno != EEXIST) {
         return EON_ERROR(ERR_INTERNAL, strerror(errno));
       }

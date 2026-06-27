@@ -349,6 +349,16 @@ CTLDEF bool _buf_push(BufferGeneric buf, const void* values, size_t count);
   #define PLATFORM_WINDOWS 1
 #endif
 
+#ifdef PLATFORM_POSIX
+  #include <time.h>
+  typedef time_t ctl_time_t;
+  #define ctl_execvp(file_name, argv) execvp((file_name), (argv))
+#elif defined(PLATFORM_WINDOWS)
+  #include <process.h>
+  typedef long long ctl_time_t;
+  #define ctl_execvp(file_name, argv) _execvp((file_name), (const char* const*)(argv))
+#endif
+
 /* Custom malloc, realloc and free function types (if you have some sort of an arena) */
 #ifndef __str_allocator_t_defined
 #define __str_allocator_t_defined
@@ -815,6 +825,34 @@ CTLDEF void str_capitalize(String* s);
 #include <stddef.h>
 #include <stdbool.h>
 
+#ifdef PLATFORM_POSIX
+  #include <sys/stat.h>
+  #include <limits.h>
+  #include <unistd.h>
+  typedef struct stat futil_struct_stat;
+  #define PATH_SEP '/'
+  #define PATH_SEP_DQ "/"
+  #define futil_mkdir(path) (mkdir((path), 0775) == 0)
+  #define futil_stat(file_path, st) (stat((file_path), (st)) == 0)
+  #define futil_access(file_path, mode) (access((file_path), (mode)) == 0)
+
+#elif defined(PLATFORM_WINDOWS)
+  #define WIN32_LEAN_AND_MEAN
+  #include <windows.h>
+  #include <direct.h>
+  #include <io.h>
+  #include <sys/stat.h>
+  #define PATH_SEP '\\'
+  #define PATH_SEP_DQ "\\"
+  #ifndef PATH_MAX
+    #define PATH_MAX MAX_PATH
+  #endif
+  typedef struct _stat64 futil_struct_stat;
+  #define futil_mkdir(path) (_mkdir((path)) == 0)
+  #define futil_stat(file_path, st) (_stat64((file_path), (st)) == 0)
+  #define futil_access(file_path, mode) (_access((file_path), (mode)) == 0)
+#endif
+
 #define concat_path(path, ...) \
   concat_path_impl((path), __VA_ARGS__, NULL)
 
@@ -828,6 +866,13 @@ CTLDEF size_t count_lines_from_str(const String* s);
 
 #include <time.h>
 #include <stdbool.h>
+
+/*
+  You can define NATIVE_COMPILER in command line while bootstrapping
+*/
+#ifndef NATIVE_COMPILER
+  #define NATIVE_COMPILER NULL /* Detect compiler in runtime */
+#endif
 
 typedef struct {
   bool reset;
@@ -848,8 +893,10 @@ bool cmd_insta_run_impl(const char* first, ...);
 #define BUIC_REBUILD_URSELF(argc, argv, ...) \
   buic_rebuild_urself((argc), (argv), __FILE__, ##__VA_ARGS__, NULL)
 
-CTLDEF time_t buic_compare_mtimes(const char* f1, const char* f2);
+CTLDEF ctl_time_t buic_compare_mtimes(const char* f1, const char* f2);
 CTLDEF bool buic_rebuild_urself(int argc, char** argv, const char* file_name, const char* first, ...);
+CTLDEF const char* buic_get_native_compiler(void);
+CTLDEF String buic_search_path(const char* bin);
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -1668,30 +1715,6 @@ char* str_to_cstr(const String* s) {
 #include <string.h>
 #include <errno.h>
 
-#if defined(__unix__) || defined(__APPLE__)
-  #include <sys/stat.h>
-  #include <limits.h>
-#else
-  #ifdef _WIN32
-    #define WIN32_LEAN_AND_MEAN
-    #include <windows.h>
-    #include <direct.h>
-    #ifndef PATH_MAX
-      #define PATH_MAX MAX_PATH
-    #endif
-  #else
-    #error "Platform is not supported."
-  #endif /* _WIN32 */
-#endif /* __unix__ || __APPLE__ */
-
-#ifdef _WIN32
-  #define PATH_SEP '\\'
-  #define FUTIL_MKDIR(path) _mkdir(path)
-#else
-  #define PATH_SEP '/'
-  #define FUTIL_MKDIR(path) mkdir(path, 0775)
-#endif /* _WIN32 */
-
 ErrorOrNot mkdir_if_not_exists(const char* path) {
   if (!is_valid_path(path)) return EON_ERROR(ERR_INVALID_ARG, "Invalid path");
   for (const char* p = path + 1; *p != '\0'; p++) {
@@ -1700,7 +1723,7 @@ ErrorOrNot mkdir_if_not_exists(const char* path) {
       if (i >= PATH_MAX) return EON_ERROR(ERR_INVALID_ARG, "Path is too long");
       char buf[PATH_MAX] = {0};
       memcpy(buf, path, i);
-      int status = FUTIL_MKDIR(buf);
+      int status = futil_mkdir(buf);
       if (status != 0 && errno != EEXIST) {
         return EON_ERROR(ERR_INTERNAL, strerror(errno));
       }
@@ -1903,36 +1926,38 @@ defer:
     fprintf(stderr, "ERROR: Cannot rebuild urself: "fmt": %s\n", ##__VA_ARGS__, strerror(errno)); \
   } while (0)
 
-time_t buic_compare_mtimes(const char* f1, const char* f2) {
-  struct stat st_f1 = {0};
-  if (stat(f1, &st_f1) != 0) {
+ctl_time_t buic_compare_mtimes(const char* f1, const char* f2) {
+  futil_struct_stat st_f1, st_f2 = {0};
+  if (!futil_stat(f1, &st_f1)) {
     _rebuild_urself_error("cannot stat '%s'", f1);
     return false;
   }
 
-  struct stat st_f2 = {0};
-  if (stat(f2, &st_f2) != 0) {
+  if (!futil_stat(f2, &st_f2)) {
     _rebuild_urself_error("cannot stat '%s'", f2);
     return false;
   }
-
-  return st_f1.st_mtime - st_f2.st_mtime;
+  return (ctl_time_t)(st_f1.st_mtime - st_f2.st_mtime);
 }
 
 bool buic_rebuild_urself(int argc, char** argv, const char* file_name, const char* first, ...) {
   char** orig_argv = argv;
   const char* bin_name = argv_shift(&argc, &argv);
-
-#ifdef PLATFORM_POSIX
   char old_bin[1024] = {0};
   snprintf(old_bin, sizeof(old_bin), "%s.old", bin_name);
+  bool needs_rebuild = false;
 
   // If old binary exists, take its last modification time and compare it to source file
-  bool needs_rebuild = false;
-  if (access(old_bin, F_OK) != 0) {
+  if (!futil_access(old_bin, F_OK)) {
     needs_rebuild = true; // no .old binary
   } else {
-    needs_rebuild = buic_compare_mtimes(file_name, bin_name) > 0;
+    // fail-safe over fail-silent policy
+    // Even if both script and binary has same last mtime, rebuild anyway.
+    // Because in other way, if you for example extract these files from
+    // a zip or you are so fast that you edited and instantly run build
+    // binary and so their mtimes can be equal. At this point, we'll try
+    // to rebuild anyway because one additional build doesn't kill
+    needs_rebuild = buic_compare_mtimes(file_name, bin_name) >= 0;
   }
 
   // Early return if no rebuild needed
@@ -1948,9 +1973,9 @@ bool buic_rebuild_urself(int argc, char** argv, const char* file_name, const cha
 
   // Construct and run rebuild command
   CommandBuilder cmd = {0};
-  cmd_push(&cmd, "cc");
+  if (NATIVE_COMPILER) cmd_push(&cmd, NATIVE_COMPILER);
+  else cmd_push(&cmd, buic_get_native_compiler());
   cmd_push(&cmd, file_name);
-
   // custom flags if you need
   if (first) {
     cmd_push(&cmd, first);
@@ -1961,7 +1986,10 @@ bool buic_rebuild_urself(int argc, char** argv, const char* file_name, const cha
       cmd_push(&cmd, arg);
     va_end(args);
   }
-  cmd_push(&cmd, "-o", bin_name);
+  if (strcmp(cmd.items[0], "cl.exe") == 0 ||
+      strcmp(cmd.items[0], "cl") == 0)
+    cmd_push(&cmd, temp_sprintf("/Fe:%s", bin_name));
+  else cmd_push(&cmd, "-o", bin_name);
 
   // Run rebuild command
   if (!cmd_run(&cmd)) {
@@ -1970,14 +1998,54 @@ bool buic_rebuild_urself(int argc, char** argv, const char* file_name, const cha
   }
 
   // Run the new binary and exit this old one
-  execvp(bin_name, orig_argv);
+  ctl_execvp(bin_name, orig_argv);
   _rebuild_urself_error("cannot run new binary: %s", strerror(errno));
   return false;
+}
 
-#elif defined(PLATFORM_WINDOWS)
-  TODO("buic_rebuild_urself not implemented for winslop.");
+const char* buic_get_native_compiler(void) {
+  const char *env = getenv("CC");
+  if (env && *env) return env; // use user's definition if exists
+
+#ifdef PLATFORM_UNIX
+  // Search for "cc", "gcc", "clang"
+  const char* candidates[] = {"cc","gcc","clang",NULL};
+#elif defined(PLATFORM_APPLE)
+  const char* candidates[] = {"clang",NULL};
+#else
+  const char* candidates[] = {"cl.exe","gcc.exe","cc.exe","clang.exe",NULL};
 #endif
-  return true;
+
+  for (int i = 0; candidates[i]; i++) {
+    String s = buic_search_path(candidates[i]);
+    bool found = s.data != NULL;
+    str_free(&s);
+    if (found) return candidates[i];
+  }
+  return NULL;
+}
+
+String buic_search_path(const char* bin) {
+#ifdef PLATFORM_WINDOWS
+  char full[PATH_MAX]; // NOTE: bin should ends with .exe
+  size_t fullsz = (size_t)SearchPathA(NULL, bin, NULL, PATH_MAX, full, NULL);
+  if (fullsz == 0) goto fail;
+  return str_newn(full, fullsz);
+#else
+  const char* path_env = getenv("PATH");
+  if (!path_env) goto fail;
+  StringView env_sv = sv(path_env);
+  StringView dir = sv_chop_by_delim(&env_sv, ':');
+  while (dir.len > 0) {
+    char full[PATH_MAX];
+    int n = snprintf(full, sizeof(full), SV_FMT PATH_SEP_DQ"%s", SV_ARG(dir), bin);
+    assert(n >= 0);
+    if (futil_access(full, F_OK)) return str_newn(full, (size_t)n);
+    dir = sv_chop_by_delim(&env_sv, ':');
+  }
+#endif
+fail:
+  return (String){0};
 }
 // buic.c end
 
