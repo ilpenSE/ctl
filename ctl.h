@@ -508,6 +508,8 @@ _BASIC_TYPES_WITH_BITS(_BASIC_CLAMP_DECLARATION)
     default: clampi32 \
 )(a, lower, upper)
 
+int powii(int base, int exp);
+
 #include <string.h>
 #include <stddef.h>
 
@@ -1249,6 +1251,17 @@ const char* argv_shift(int* argc, char*** argv) {
   }
 _BASIC_TYPES_WITH_BITS(X)
 #undef X
+
+int powii(int base, int exp) {
+  int result = 1;
+  while (exp > 0) {
+    if (exp & 1)
+    result *= base;
+    base *= base;
+    exp >>= 1;
+  }
+  return result;
+}
 // basic.c end
 
 // sv.c start
@@ -2367,8 +2380,6 @@ fail:
   return RES_ERR(JsonObject, ERR_INTERNAL);
 }
 
-#include <math.h>
-
 Result(JsonValue) jps_parse_value(Json* json) {
   JsonToken tok = json->ps_curr;
   JsonValue val = {0};
@@ -2443,7 +2454,7 @@ Result(JsonValue) jps_parse_value(Json* json) {
       }
     }
 
-    result = (value / scale) * pow(10, exp * exp_sign) * sign;
+    result = (value / scale) * powii(10, exp * exp_sign) * sign;
     val.as.number = result;
   } break;
   case JTK_TRUE: {val.type = JSON_TRUE; val.as.boolean = true;} break;

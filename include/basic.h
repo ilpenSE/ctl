@@ -189,4 +189,6 @@ _BASIC_TYPES_WITH_BITS(_BASIC_CLAMP_DECLARATION)
     default: clampi32 \
 )(a, lower, upper)
 
+int powii(int base, int exp);
+
 #endif /* BASIC_H */

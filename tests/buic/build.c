@@ -5,7 +5,7 @@
 #define BUILD_FOLDER "build/"
 
 int main(int argc, char** argv) {
-  BUIC_REBUILD_URSELF(argc, argv, "-lm");
+  BUIC_REBUILD_URSELF(argc, argv);
 
   if (mkdir_if_not_exists(BUILD_FOLDER).is_error) return 1;
   CommandBuilder cmd = {0};

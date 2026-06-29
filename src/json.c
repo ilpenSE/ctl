@@ -322,8 +322,6 @@ fail:
   return RES_ERR(JsonObject, ERR_INTERNAL);
 }
 
-#include <math.h>
-
 Result(JsonValue) jps_parse_value(Json* json) {
   JsonToken tok = json->ps_curr;
   JsonValue val = {0};
@@ -398,7 +396,7 @@ Result(JsonValue) jps_parse_value(Json* json) {
       }
     }
 
-    result = (value / scale) * pow(10, exp * exp_sign) * sign;
+    result = (value / scale) * powii(10, exp * exp_sign) * sign;
     val.as.number = result;
   } break;
   case JTK_TRUE: {val.type = JSON_TRUE; val.as.boolean = true;} break;

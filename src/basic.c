@@ -53,3 +53,14 @@ const char* argv_shift(int* argc, char*** argv) {
   }
 _BASIC_TYPES_WITH_BITS(X)
 #undef X
+
+int powii(int base, int exp) {
+  int result = 1;
+  while (exp > 0) {
+    if (exp & 1)
+    result *= base;
+    base *= base;
+    exp >>= 1;
+  }
+  return result;
+}

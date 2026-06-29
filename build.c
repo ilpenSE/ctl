@@ -30,7 +30,7 @@ bool build(CommandBuilder* cmd, bool is_debug);
 bool pack(CommandBuilder* cmd);
 
 int main(int argc, char** argv) {
-  BUIC_REBUILD_URSELF(argc, argv, "-lm");
+  BUIC_REBUILD_URSELF(argc, argv);
   const char* program_name = argv_shift(&argc, &argv);
 
   // Create all necessary folders.
